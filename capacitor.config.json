@@ -1,0 +1,8 @@
+{
+  "appId": "com.codedrop.app",
+  "appName": "QrDrop",
+  "webDir": "www",
+  "android": {
+    "allowMixedContent": false
+  }
+}

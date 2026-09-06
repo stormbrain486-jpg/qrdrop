@@ -1,0 +1,138 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install npm dependencies
+        run: npm install
+
+      - name: Stage the web app into www/
+        run: |
+          mkdir -p www
+          if [ -f www/index.html ]; then
+            echo "www/index.html already present, skipping copy."
+          else
+            cp index.html www/index.html
+          fi
+
+      - name: Generate the native Android project
+        run: npx cap add android
+
+      - name: Copy custom native files into the generated project
+        run: |
+          set -e
+          PKG_DIR="android/app/src/main/java/com/codedrop/app"
+          mkdir -p "$PKG_DIR"
+          for f in MainActivity.java ScreenCapturePlugin.java ScreenCaptureService.java FileSaverPlugin.java FloatingButtonService.java; do
+            src=$(find . -maxdepth 4 -name "$f" -not -path "./android/*" | head -n 1)
+            if [ -z "$src" ]; then
+              echo "ERROR: could not find $f in the repo." >&2
+              exit 1
+            fi
+            cp "$src" "$PKG_DIR/$f"
+          done
+
+      - name: Patch AndroidManifest.xml with the required permissions and services
+        run: |
+          python3 - <<'PY'
+          import pathlib
+
+          manifest_path = pathlib.Path("android/app/src/main/AndroidManifest.xml")
+          content = manifest_path.read_text()
+
+          permissions = """
+              <uses-permission android:name="android.permission.CAMERA"/>
+              <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+              <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
+              <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+              <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION"/>
+              <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
+              <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+              <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+              <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28"/>
+              <uses-feature android:name="android.hardware.camera" android:required="false"/>
+          """
+
+          services = """
+                  <service
+                      android:name=".ScreenCaptureService"
+                      android:foregroundServiceType="mediaProjection"
+                      android:exported="false" />
+                  <service
+                      android:name=".FloatingButtonService"
+                      android:foregroundServiceType="specialUse"
+                      android:exported="false">
+                      <property
+                          android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                          android:value="floating-screenshot-button" />
+                  </service>
+          """
+
+          if "ScreenCaptureService" not in content:
+              content = content.replace("<application", permissions + "\n    <application", 1)
+              content = content.replace("</application>", services + "    </application>")
+              manifest_path.write_text(content)
+              print("AndroidManifest.xml patched.")
+          elif "FloatingButtonService" not in content:
+              # Manifest was patched by an older version of this workflow before the floating
+              # button existed — add just the new pieces without duplicating the old ones.
+              content = content.replace(
+                  '<uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>',
+                  '<uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>\n'
+                  '    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>\n'
+                  '    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>\n'
+                  '    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28"/>'
+              )
+              floating_service = """
+                  <service
+                      android:name=".FloatingButtonService"
+                      android:foregroundServiceType="specialUse"
+                      android:exported="false">
+                      <property
+                          android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                          android:value="floating-screenshot-button" />
+                  </service>
+              """
+              content = content.replace("</application>", floating_service + "    </application>")
+              manifest_path.write_text(content)
+              print("AndroidManifest.xml upgraded with floating-button additions.")
+          else:
+              print("AndroidManifest.xml already patched, skipping.")
+          PY
+
+      - name: Sync Capacitor (copies web assets, wires up plugins)
+        run: npx cap sync android
+
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
+
+      - name: Build debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: codedrop-debug-apk
+          path: android/app/build/outputs/apk/debug/*.apk
