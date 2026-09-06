@@ -4,10 +4,10 @@ import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.webkit.PermissionRequest;
-import android.webkit.WebChromeClient;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import com.getcapacitor.BridgeActivity;
+import com.getcapacitor.BridgeWebChromeClient;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +26,18 @@ import java.util.List;
  * in the app, forever, because the check could never pass. It now grants exactly the resources
  * the WebView actually asked for and that are actually permitted, instead of an all-or-nothing
  * check.
+ *
+ * FIX (couldn't add/attach files anywhere — Compress, Convert, Zip, Enhance, chat attachments):
+ * the old code replaced the WebView's chrome client with `new WebChromeClient() {...}` — a
+ * bare, plain android.webkit.WebChromeClient. That wiped out Capacitor's own BridgeWebChromeClient,
+ * which is what implements onShowFileChooser() — the callback Android's WebView needs in order
+ * to actually launch a file-picker when JS taps an &lt;input type="file"&gt;. A plain
+ * WebChromeClient does not implement that method (the platform default just returns false), so
+ * every "Tap to choose files" drop zone in the app silently did nothing on the native Android
+ * build — no chooser ever opened, even though the exact same code worked fine on desktop
+ * browsers (which don't go through this native bridge at all). Now this class subclasses
+ * BridgeWebChromeClient and only overrides onPermissionRequest(), so file choosers keep working
+ * exactly as Capacitor intends.
  */
 public class MainActivity extends BridgeActivity {
 
@@ -52,7 +64,7 @@ public class MainActivity extends BridgeActivity {
             ActivityCompat.requestPermissions(this, toRequest.toArray(new String[0]), RUNTIME_PERMISSION_REQUEST_CODE);
         }
 
-        this.bridge.getWebView().setWebChromeClient(new WebChromeClient() {
+        this.bridge.getWebView().setWebChromeClient(new BridgeWebChromeClient(this.bridge) {
             @Override
             public void onPermissionRequest(final PermissionRequest request) {
                 runOnUiThread(() -> {

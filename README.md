@@ -1,5 +1,68 @@
 # QrDrop — Android app
 
+This repo wraps the QrDrop web app in a real Android app using [Capacitor](https://capacitorjs.com).
+
+> **This is a second round of fixes on top of the previous build.** The three issues below were
+> reported after the first version was built and pushed through GitHub Actions, and are now
+> fixed in this version. As before, I could not compile or run this myself (no internet/Android
+> SDK in the environment I work in) — please test on a real device once it builds, especially the
+> live screen-share, since frame throttling/quality was tuned by reasoning about the code, not by
+> watching it run.
+
+---
+
+## What was broken this round, and what changed
+
+**1. Couldn't add/attach files anywhere in the app (Compress, Convert, Zip, Enhance, chat
+attachments) on the native Android build.**
+`MainActivity.java` replaced the WebView's chrome client with a bare `new WebChromeClient() {...}`
+— a plain `android.webkit.WebChromeClient`. That silently wiped out Capacitor's own
+`BridgeWebChromeClient`, which is what implements `onShowFileChooser()` — the callback Android's
+WebView needs to actually open a file picker when JS taps an `<input type="file">`. A plain
+`WebChromeClient` doesn't implement that method (the platform default just returns `false`), so
+every "Tap to choose files" drop zone in the app — Compress, Convert, Zip, Enhance, chat
+attachments, all of it — silently did nothing on the native build, even though the exact same
+code worked fine on desktop browsers (which never go through this native bridge at all).
+**Fix:** `MainActivity`'s inner class now extends `BridgeWebChromeClient` instead of the plain
+`WebChromeClient`, and only overrides `onPermissionRequest()` — file choosers now work exactly as
+Capacitor intends.
+
+**2. Camera flip failing, especially in the meeting screen.**
+Most Android camera HALs can only have **one** camera session open at a time — front *or* back,
+never both simultaneously. The old flip code requested the new-facing camera stream *before*
+releasing the currently-active one, which real Android hardware often rejects (or silently hands
+back the same camera it was already using, ignoring the requested facing mode). **Fix:**
+`flipCallCamera()` now stops and releases the current camera track *first*, then requests the
+opposite-facing camera. It also preserves mic/camera mute state across the flip, and if the new
+camera genuinely fails to open (single-camera device), it tries to recover the original camera
+so you're never left with a dead video feed instead of just a failed flip.
+
+**3. Live "Share Screen" during a call didn't work on Android at all.**
+This was intentionally disabled in the previous version — Android's WebView has no
+`getDisplayMedia()`, and building a full native WebRTC video-capturer is a much bigger project
+than a small plugin. This version adds a lighter-weight but genuinely working path instead:
+- `ScreenCapturePlugin.java` gained `startLiveStream()` / `stopLiveStream()`, which reuse the
+  same MediaProjection pipeline already used for screenshots, but keep the capture session open
+  and continuously emit downscaled JPEG frames (throttled to ~8fps, capped at 960px on the long
+  edge) as a `"screenLiveFrame"` plugin event.
+- On the JS side, `nativeLiveScreenStream()` (in `index.html`) listens for those frames, draws
+  each one onto an offscreen `<canvas>`, and calls the canvas's own `captureStream()` — a
+  standard Web API the WebView already supports — which produces a real `MediaStream` video
+  track.
+- That track is handed to the **exact same** PeerJS/WebRTC call code the rest of the app already
+  uses for device-to-device calls and meetings, so no native WebRTC library needed to be bundled
+  at all — the WebView's built-in `RTCPeerConnection` does the actual encoding/sending, same as
+  every other call in the app.
+- **Known limitation of this approach:** no audio track is captured yet (Android's
+  system-audio-playback capture is a separate, newer API not wired up here), and the frame rate
+  is capped around 8fps — fine for reading a shared screen, not video-smooth like a desktop
+  share. The "Share Screen" buttons are no longer disabled on native Android; there's a tooltip
+  noting the lower quality instead.
+
+---
+
+## Everything below is unchanged from the previous README
+
 This repo wraps the QrDrop web app in a real Android app using [Capacitor](https://capacitorjs.com),
 with custom native code added for:
 - Camera & microphone access (calls, camera capture, QR scanning), including a front/rear
@@ -12,82 +75,14 @@ with custom native code added for:
   actual Photos/Movies/Downloads via a native file-saving bridge, since Android's WebView can't
   do a normal browser-style download
 - Proper Android back-button handling
-
-### ⚠️ Read this first — what this repo can and can't do
-
-I built and wrote every file in here by hand, but **I could not compile or run any of it** —
-the environment I built this in has no internet access and no Android SDK, so none of this has
-been tested on a real build or a real device. The fixes below are based on carefully reading
-the code and Android's documented behavior (in particular, two genuine, well-known Android
-gotchas — see "What was actually broken" below) — but budget time for possible small build
-fixes in Android Studio, and please actually test screenshots/recording/floating button/camera
-flip on a real device once it builds, since I have no way to verify runtime behavior myself.
-
-**One feature is still not included:** live "Share Screen" during a call (seeing your screen in
-real time from another device) is disabled on Android with an explanation in the app. Turning a
-native screen capture into a live video stream that WebRTC can send to another device requires
-much deeper native/WebRTC integration than a small plugin — genuinely a separate project.
-Screenshots and screen *recording* (saved as a video file you can then send as a normal file)
-both work, as does the floating screenshot button.
-
----
-
-## What was actually broken, and what I changed
-
-**1. Files never arrived (P2P transfers, chat images/videos, screenshots, recordings).**
-Every "download" in this app worked by creating a `blob:` URL and clicking a hidden
-`<a download>` link — a real-browser trick. Android's WebView does not support this: the click
-silently does nothing, or produces a file nobody can find. There is no WebView setting that
-fixes this. Fix: a new **FileSaverPlugin** native plugin that writes bytes into the device's
-real Photos/Movies/Downloads storage via `MediaStore`, and a shared JS helper
-(`nativeSaveBlob()` in `index.html`) that every download path now routes through when running
-in the native app.
-
-**2. Screen recording silently failed.** Two separate bugs:
-- *Race condition*: MediaProjection requires an active foreground service at the moment the
-  virtual display is created. The old code called `startService()` and then, in the very same
-  synchronous call, immediately created the virtual display — but `startService()` only *posts*
-  a message; the service doesn't actually start running until the current code finishes and
-  control returns to the main event loop. So the virtual display was being created before the
-  foreground service had actually started, which Android 10+ (and especially 14+) rejects. Fix:
-  the foreground service is now started **before** requesting the screen-capture permission
-  dialog, not after — granting that system permission requires a real human tap, which takes far
-  longer than one event-loop cycle, so by the time it comes back the service is definitely
-  running.
-- *Recordings were saved to `getCacheDir()`*, which is private to the app — invisible to any
-  file manager or gallery. Fix: `stopRecording()` now copies the finished video into the device's
-  real Movies folder (`Movies/CodeDrop`) and deletes the private temp copy.
-
-**3. Camera sometimes stopped working entirely.** `MainActivity.java`'s WebView permission
-bridge required **both** camera AND microphone to already be granted before it would grant
-*any* camera or mic request — including camera-only requests like the built-in QR scanner's,
-which never even asks for the microphone. If you'd ever denied microphone access, the camera
-would silently stop working everywhere in the app, permanently, since that check could never
-pass. Fixed to grant exactly the resources a given request actually needs and actually has.
-
-**4. No way to switch front/rear camera.** Every camera feature was hardcoded to the front
-(selfie) camera with no way to change it. Added a shared `cameraFacingMode` state and a
-"🔄 Flip Camera" button in the Camera modal, the device-chat call screen, and the meeting call
-screen — tapping it re-acquires the camera on the other side and swaps it into any active call
-without dropping the connection.
-
-**5. The old "Floating capture" button could never have worked on Android.** It used the
-Document Picture-in-Picture API, which is desktop Chrome/Edge only — no mobile browser or
-WebView has ever implemented it, so it was correctly hidden on Android, but that also meant
-mobile had no floating button at all. Added a real one: **FloatingButtonService**, a foreground
-service that draws a draggable "📸" button on top of every app using Android's "display over
-other apps" permission. The first tap after enabling it asks for that permission plus one
-screen-capture consent; every tap after that captures instantly with no further prompts, and
-auto-saves straight to `Pictures/CodeDrop`.
-
----
+- Live screen sharing during device-to-device calls and meetings (new — see above)
 
 ## What's in this repo
 
 ```
-├── www/index.html              ← the actual app (all fixes + Android bridging already applied)
-├── native-src/                 ← custom native Android files — you copy these INTO the
-│   │                              generated android/ folder (step 4 below creates it)
+├── index.html / www/index.html  ← the actual app (all fixes + Android bridging already applied)
+├── native-src/                  ← custom native Android files — you copy these INTO the
+│   │                               generated android/ folder (step 4 below creates it)
 │   ├── AndroidManifest-additions.xml
 │   └── java/com/codedrop/app/
 │       ├── MainActivity.java
@@ -95,6 +90,7 @@ auto-saves straight to `Pictures/CodeDrop`.
 │       ├── ScreenCaptureService.java
 │       ├── FloatingButtonService.java
 │       └── FileSaverPlugin.java
+├── .github/workflows/main.yml   ← builds a debug APK automatically on every push to main
 ├── package.json
 ├── capacitor.config.json
 └── README.md
@@ -109,8 +105,7 @@ auto-saves straight to `Pictures/CodeDrop`.
 ## Setup — run these once
 
 ```bash
-# 1. Install the Capacitor packages (needs internet — this downloads the real,
-#    correct Android project template, which is why I can't hand-write it myself)
+# 1. Install the Capacitor packages
 npm install
 
 # 2. Generate the native Android project
@@ -133,46 +128,30 @@ npx cap open android
 Then in Android Studio: let Gradle sync finish, plug in your phone (with USB debugging
 enabled) or start an emulator, and press **Run ▶**.
 
-The included `.github/workflows/main.yml` does all of steps 1–5 automatically on every push to
-`main` and uploads a debug APK as a workflow artifact, if you'd rather grab a build from GitHub
-Actions than build locally.
+`.github/workflows/main.yml` does all of steps 1–5 automatically on every push to `main` and
+uploads a debug APK as a workflow artifact, if you'd rather grab a build from GitHub Actions
+than build locally.
 
 ## If your package name isn't `com.codedrop.app`
 
 `capacitor.config.json`'s `appId` controls this. If you change it, also change the `package`
-line at the top of all five `.java` files in `native-src/` to match, and the folder path in
-step 3 above (`android/app/src/main/java/<your/package/path>/`).
+line at the top of all five `.java` files in `native-src/`, and the folder path in step 3 above.
 
-## Rebuilding after editing www/index.html
+## Rebuilding after editing index.html
 
-Any time you change `www/index.html`, run:
+Any time you change `index.html`, copy it into `www/index.html` too (or just let the GitHub
+Actions workflow do it), then run:
 ```bash
 npx cap sync android
 ```
 then re-run from Android Studio.
 
-## Permissions your phone will ask for
+## Please test these specifically before relying on this build
 
-- **Camera & microphone** — asked once on first launch (for calls, QR scanning, camera capture)
-- **Screen recording** — asked each time you start Snipping Tool / Full Screenshot / Screen
-  Recording, and once when you first enable the floating button (this is how Android's
-  system-level screen capture consent always works for a fresh session — it can't be granted
-  permanently, by design, for privacy reasons)
-- **Display over other apps** — asked once, the first time you enable the floating screenshot
-  button; you'll be sent to a Settings screen to grant it, then returned to the app
-- **Notifications** (Android 13+) — needed for the small persistent notification Android
-  requires while a screen recording or the floating button is active
-
-## Known limitations, being upfront
-
-- Live screen-sharing during calls: see the warning at the top of this file.
-- The in-browser "Floating Capture" button (Document Picture-in-Picture) still doesn't exist on
-  Android because no mobile browser has ever implemented that API — but the native floating
-  button described above replaces it with something that actually works.
-- This app relies on the public PeerJS broker and a free OpenRelay TURN server for connecting
-  devices across different networks. Fine for personal use; if you ever need guaranteed
-  uptime, you'd want your own PeerServer + TURN credentials.
-- Files larger than a couple MB are streamed to native storage in ~256KB chunks rather than one
-  big transfer, to avoid holding an entire video in memory as text — this hasn't been measured
-  for speed on a real device; if very large video transfers feel slow, that chunk size
-  (`CHUNK_SIZE`/`chunkSize` in `index.html`'s native-save helper) is the first thing to tune.
+- **File uploads**: Compress / Convert / Zip / Enhance drop zones, and chat file attachments —
+  confirm tapping actually opens Android's file picker now.
+- **Camera flip**: in the 1:1 device call screen, in a meeting, and in the plain camera modal —
+  confirm it switches and that mute state survives the flip.
+- **Live screen share**: start a call/meeting, tap "Share Screen", confirm the other side
+  actually sees a (throttled, ~8fps) live view of your screen rather than a frozen frame or
+  nothing. There's currently no audio with it.

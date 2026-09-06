@@ -1976,16 +1976,25 @@ async function getVideoStream(){const q=qualitySettings();return navigator.media
    or interrupt audio. ---- */
 async function flipCallCamera(context){
   const desired = cameraFacingMode==='user' ? 'environment' : 'user';
+  const liveStream = context==='meeting' ? mtLocalStream : dcLocalStream;
+  const oldTrack = liveStream ? liveStream.getVideoTracks()[0] : null;
+  const oldTrackWasEnabled = oldTrack ? oldTrack.enabled : true;
+  // FIX (flip camera failing, especially in the meeting screen): most Android camera HALs can
+  // only have ONE camera session open at a time — front OR back, never both. The old code
+  // requested the new-facing stream *before* releasing the old one, so on real Android hardware
+  // the getUserMedia() call for the opposite camera would fail outright (or silently hand back
+  // the *same* camera) because the still-open old camera was holding the hardware. Stopping the
+  // current track first releases the camera so the new request can actually succeed.
+  if(oldTrack){ try{ liveStream.removeTrack(oldTrack); }catch(e){} oldTrack.stop(); }
   try{
     const newStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:desired},audio:false});
     const newTrack = newStream.getVideoTracks()[0];
-    if(!newTrack) return;
+    if(!newTrack) throw new Error('No video track returned for the new camera.');
+    newTrack.enabled = oldTrackWasEnabled; // preserve mute/camera-off state across the flip
     cameraFacingMode = desired;
     if(context==='meeting'){
       if(mtLocalStream){
-        const oldTrack = mtLocalStream.getVideoTracks()[0];
         mtLocalStream.addTrack(newTrack);
-        if(oldTrack){ mtLocalStream.removeTrack(oldTrack); oldTrack.stop(); }
         for(const call of mtCalls.values()){
           const sender = call?.peerConnection?.getSenders?.().find(s=>s.track&&s.track.kind==='video');
           if(sender) await sender.replaceTrack(newTrack);
@@ -1993,9 +2002,7 @@ async function flipCallCamera(context){
       }
     } else {
       if(dcLocalStream){
-        const oldTrack = dcLocalStream.getVideoTracks()[0];
         dcLocalStream.addTrack(newTrack);
-        if(oldTrack){ dcLocalStream.removeTrack(oldTrack); oldTrack.stop(); }
         dcMediaTrack = newTrack;
         for(const call of dcMediaCalls.values()){
           const sender = call?.peerConnection?.getSenders?.().find(s=>s.track&&s.track.kind==='video');
@@ -2004,10 +2011,38 @@ async function flipCallCamera(context){
       }
     }
   }catch(e){
+    // We already released the old camera above, so if the new one failed to open we'd
+    // otherwise be left with a dead/frozen video feed. Try to recover the camera we just had.
+    try{
+      const recoverStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:cameraFacingMode},audio:false});
+      const recoverTrack = recoverStream.getVideoTracks()[0];
+      if(recoverTrack){
+        recoverTrack.enabled = oldTrackWasEnabled;
+        if(context==='meeting'&&mtLocalStream){
+          mtLocalStream.addTrack(recoverTrack);
+          for(const call of mtCalls.values()){
+            const sender = call?.peerConnection?.getSenders?.().find(s=>s.track&&s.track.kind==='video');
+            if(sender) await sender.replaceTrack(recoverTrack);
+          }
+        } else if(dcLocalStream){
+          dcLocalStream.addTrack(recoverTrack);
+          dcMediaTrack = recoverTrack;
+          for(const call of dcMediaCalls.values()){
+            const sender = call?.peerConnection?.getSenders?.().find(s=>s.track&&s.track.kind==='video');
+            if(sender) await sender.replaceTrack(recoverTrack);
+          }
+        }
+      }
+    }catch(e2){ /* genuinely only one camera available — nothing more we can do */ }
     if(typeof setCallStatus==='function') setCallStatus("Could not switch camera — your device may only have one.");
+    const mtStatus=document.getElementById('mt-participant-count');
+    if(context==='meeting'&&mtStatus){ const prev=mtStatus.textContent; mtStatus.textContent='Could not switch camera — your device may only have one.'; setTimeout(()=>{ if(mtStatus.textContent==='Could not switch camera — your device may only have one.') mtStatus.textContent=prev; },2500); }
   }
 }
-async function getScreenStream(){return navigator.mediaDevices.getDisplayMedia({video:true,audio:dcShareAudio})}
+async function getScreenStream(){
+  if(isNativeAndroid()) return nativeLiveScreenStream();
+  return navigator.mediaDevices.getDisplayMedia({video:true,audio:dcShareAudio});
+}
 function prepareMediaUI(kind){const panel=document.getElementById('dc-media-panel'),remote=document.getElementById('dc-remote-video'),local=document.getElementById('dc-local-video'),audio=document.getElementById('dc-audio-only');panel.classList.add('active');remote.style.display=kind==='voice'?'none':'block';local.style.display=kind==='voice'?'none':'block';audio.classList.toggle('active',kind==='voice');document.getElementById('dc-media-label').textContent=kind==='screen'?'Screen share':kind==='video'?'Video call':'Voice call';document.getElementById('dc-end-call-btn').disabled=false;updateLocalMuteBadges()}
 function clearMediaUI(){stopCameraBypass();const __panel=document.getElementById('dc-media-panel');__panel.classList.remove('controls-hidden');dcControlsHidden=false;const __rv=document.getElementById('dc-remote-video');__rv.classList.remove('cam-size-1','cam-size-2','cam-size-3','dc-pip-face');document.getElementById('dc-media-panel').classList.remove('active','sharing');document.getElementById('dc-remote-video').srcObject=null;document.getElementById('dc-local-video').srcObject=null;const sv=document.getElementById('dc-screenshare-video');if(sv)sv.srcObject=null;document.getElementById('dc-audio-only').classList.remove('active');document.getElementById('dc-end-call-btn').disabled=true;dcMicMuted=false;dcCamMuted=false;updateLocalMuteBadges();updateRemoteMuteBadges(false,false);const mt=document.getElementById('dc-mic-toggle');if(mt){mt.classList.add('active');mt.classList.remove('muted');mt.textContent='🎙 Mic On'}const ct=document.getElementById('dc-cam-toggle');if(ct){ct.classList.add('active');ct.classList.remove('muted');ct.textContent='📷 Camera On'}const mmb=document.getElementById('dc-media-mic-btn');if(mmb){mmb.classList.remove('muted');mmb.textContent='🎙 Mic'}const mcb=document.getElementById('dc-media-cam-btn');if(mcb){mcb.classList.remove('muted');mcb.textContent='📷 Camera'}resetBubblePosition(document.getElementById('dc-local-video-wrap'));resetBubblePosition(document.getElementById('dc-remote-video'))}
 function getSelectedCallTargets(){return dcSelectedPeer?[dcSelectedPeer]:[...dcConns.keys()]}
@@ -2145,7 +2180,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 async function populateAudioDevices(){}
 async function changeAudioDevice(){}
 async function changeMediaQuality(){const track=dcMediaTrack;if(!track)return;const q=qualitySettings();try{if(track.kind==='video')await track.applyConstraints({width:{ideal:q.width},height:{ideal:q.height},frameRate:{ideal:q.frameRate,max:q.frameRate}});setCallStatus('Quality: '+document.getElementById('dc-quality').selectedOptions[0].text+' (browser/hardware may choose a lower mode).')}catch(e){setCallStatus('Exact quality is not supported; using the closest available setting.')}}
-async function startScreenShareDuringCall(){if(!navigator.mediaDevices?.getDisplayMedia){setCallStatus('Screen sharing is not supported here.');return}try{const screenStream=await navigator.mediaDevices.getDisplayMedia({video:true,audio:dcShareAudio});const screenTrack=screenStream.getVideoTracks()[0];if(!screenTrack)return;screenTrack.addEventListener('ended',()=>stopScreenShareDuringCall(),{once:true});window.dcActiveScreenStream=screenStream;const targets=getSelectedCallTargets().filter(k=>dcConns.get(k)?.open);if(!targets.length){setCallStatus('Connect to a friend first.');screenStream.getTracks().forEach(t=>t.stop());return}for(const key of targets){const peerId=dcConns.get(key)?.peer;if(!peerId)continue;const call=dcOwnPeer.call(peerId,screenStream,{metadata:{kind:'screen',shareAudio:dcShareAudio}});const skey='screen-'+key;dcMediaCalls.set(skey,call);wireScreenShareCall(call,skey)}document.getElementById('dc-screen-btn').textContent='▣ Sharing Screen';document.getElementById('dc-media-panel').classList.add('active','sharing');resetBubblePosition(document.getElementById('dc-remote-video'));resetBubblePosition(document.getElementById('dc-local-video-wrap'));setCallStatus('Screen sharing started — your camera and voice stay on for your friend.')}catch(e){setCallStatus('Screen sharing was cancelled or is not available.')}}
+async function startScreenShareDuringCall(){if(!isNativeAndroid()&&!navigator.mediaDevices?.getDisplayMedia){setCallStatus('Screen sharing is not supported here.');return}try{const screenStream=isNativeAndroid()?await nativeLiveScreenStream():await navigator.mediaDevices.getDisplayMedia({video:true,audio:dcShareAudio});const screenTrack=screenStream.getVideoTracks()[0];if(!screenTrack)return;screenTrack.addEventListener('ended',()=>stopScreenShareDuringCall(),{once:true});window.dcActiveScreenStream=screenStream;const targets=getSelectedCallTargets().filter(k=>dcConns.get(k)?.open);if(!targets.length){setCallStatus('Connect to a friend first.');screenStream.getTracks().forEach(t=>t.stop());return}for(const key of targets){const peerId=dcConns.get(key)?.peer;if(!peerId)continue;const call=dcOwnPeer.call(peerId,screenStream,{metadata:{kind:'screen',shareAudio:dcShareAudio}});const skey='screen-'+key;dcMediaCalls.set(skey,call);wireScreenShareCall(call,skey)}document.getElementById('dc-screen-btn').textContent='▣ Sharing Screen';document.getElementById('dc-media-panel').classList.add('active','sharing');resetBubblePosition(document.getElementById('dc-remote-video'));resetBubblePosition(document.getElementById('dc-local-video-wrap'));setCallStatus('Screen sharing started — your camera and voice stay on for your friend.')}catch(e){setCallStatus('Screen sharing was cancelled or is not available.')}}
 async function stopScreenShareDuringCall(){const st=window.dcActiveScreenStream;if(st){st.getTracks().forEach(t=>t.stop());window.dcActiveScreenStream=null}for(const [key,call] of [...dcMediaCalls])if(String(key).startsWith('screen-')){try{call.close()}catch(e){}dcMediaCalls.delete(key)}const sv=document.getElementById('dc-screenshare-video');if(sv)sv.srcObject=null;document.getElementById('dc-media-panel').classList.remove('sharing');resetBubblePosition(document.getElementById('dc-remote-video'));resetBubblePosition(document.getElementById('dc-local-video-wrap'));const b=document.getElementById('dc-screen-btn');if(b)b.textContent='▣ Share Screen';setCallStatus('Screen sharing stopped — camera and voice call continue.')}
 function hideDeviceChatRoom(){if(dcConns.size){showScreen('screen-device-chat-connect');updateDCModeSub();setChatMode(dcChatMode);document.getElementById('dc-invite-copy')?.classList.add('active');renderPeerList()}else{showScreen('screen-home')}}
 function disconnectDeviceChat(returnHome=true){endMediaCall(true);rejectIncomingCall();for(const [k,c] of dcConns){try{c.send({type:'chat-disconnect',from:dcOwnCode})}catch(e){}try{c.close()}catch(e){}}dcConns.clear();dcPeerNames.clear();dcRecvStates.clear();dcSelectedPeer=null;if(dcOwnPeer){try{dcOwnPeer.destroy()}catch(e){}dcOwnPeer=null}dcOwnCode='';dcChatMode='private';dcGroupWarnShown=false;updateGroupNameLockUI();renderPeerList();if(returnHome){document.getElementById('dc-own-code').textContent='— — — — —';showScreen('screen-home')}}
@@ -4524,7 +4559,13 @@ async function toggleMeetingScreenShare(){
     // tab/window/system audio (support depends on the browser + what the user picks in the share
     // dialog); echoCancellation:false keeps it from being processed like a microphone, which can
     // mangle music/video audio.
-    const stream=await navigator.mediaDevices.getDisplayMedia({video:{height:{ideal:parseInt(document.getElementById('mt-screen-quality-select').value,10)||720}},audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+    // On native Android, getDisplayMedia doesn't exist — fall back to the native MediaProjection
+    // frame-relay stream instead (see nativeLiveScreenStream()). It has no audio track (Android's
+    // MediaProjection audio-playback capture is a separate, newer API this doesn't wire up), so
+    // screen-share audio simply isn't available yet on the native app; video works normally.
+    const stream=isNativeAndroid()
+      ? await nativeLiveScreenStream()
+      : await navigator.mediaDevices.getDisplayMedia({video:{height:{ideal:parseInt(document.getElementById('mt-screen-quality-select').value,10)||720}},audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
     mtScreenStream=stream; mtSharingScreen=true;
     const track=stream.getVideoTracks()[0];
     if(track) track.addEventListener('ended',()=>stopMeetingScreenShare());
@@ -4956,18 +4997,13 @@ function gateFloatingCaptureUI(){
     btn.style.display='none';
     if(note&&note.classList.contains('cam-note'))note.style.display='none';
   }
-  // Live "Share Screen" during a call needs a continuously-updating video stream fed straight
-  // into the WebRTC connection — that's fundamentally different from a single screenshot or a
-  // file recording, and isn't something the native ScreenCapture plugin (or any lightweight
-  // native plugin) can provide. Rather than let people tap it and hit a confusing runtime
-  // failure, disable it on native Android with an honest explanation.
+  // Live "Share Screen" during a call now works on native Android too, via the MediaProjection
+  // frame-relay in ScreenCapture.startLiveStream() + canvas.captureStream() (see
+  // nativeLiveScreenStream()) — it just runs at a lower, throttled frame rate than desktop's
+  // getDisplayMedia() and currently has no audio track, so leave a note rather than disabling it.
   if(isNativeAndroid()){
-    const screenBtns=[document.getElementById('dc-screen-btn'),document.getElementById('mt-screen-toggle')];
-    for(const b of screenBtns){
-      if(!b)continue;
-      b.disabled=true;
-      b.title='Live screen sharing isn\'t available in the Android app yet — this needs deeper native support than a single screenshot or recording.';
-    }
+    const dcBtn=document.getElementById('dc-screen-btn');
+    if(dcBtn) dcBtn.title='Screen sharing on Android streams at a lower, throttled frame rate and without audio for now.';
   }
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',gateFloatingCaptureUI);else gateFloatingCaptureUI();
@@ -5135,6 +5171,45 @@ function nativeScreenCapture(){
 }
 function nativeFileSaver(){
   return window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.FileSaver;
+}
+
+/* ==========================================================================================
+   NATIVE ANDROID BRIDGE — Live screen sharing
+   Android's WebView has no getDisplayMedia() at all, so live "Share Screen" during a call used
+   to be hard-disabled on native Android with an explanation, since a real fix needs either a
+   native WebRTC video capturer (a large undertaking) or a stream the WebView can actually accept.
+   This uses the latter: ScreenCapturePlugin.startLiveStream() (native-src/ScreenCapturePlugin.java)
+   keeps the same MediaProjection pipeline already used for screenshots open, and continuously
+   emits throttled, downscaled JPEG frames as a "screenLiveFrame" plugin event. Here, each frame is
+   drawn onto an offscreen <canvas>, and canvas.captureStream() — a standard API the WebView
+   already supports — turns that canvas into a real, live MediaStream with a video track. That
+   track is handed to the exact same PeerJS call code used for every other kind of call/share, so
+   nothing about the calling/relay logic needed to change — only where the video track comes from.
+   ========================================================================================== */
+async function nativeLiveScreenStream(){
+  const ScreenCapture=nativeScreenCapture();
+  if(!ScreenCapture||!ScreenCapture.startLiveStream) throw new Error('Live screen sharing is not available on this build.');
+  const canvas=document.createElement('canvas');
+  canvas.width=960; canvas.height=540; // resized to the real frame size as soon as the first frame arrives
+  const ctx=canvas.getContext('2d');
+  let sized=false;
+  const frameImg=new Image();
+  const handle=await ScreenCapture.addListener('screenLiveFrame',({base64,width,height})=>{
+    if(!sized||canvas.width!==width||canvas.height!==height){ canvas.width=width; canvas.height=height; sized=true; }
+    frameImg.onload=()=>{ try{ ctx.drawImage(frameImg,0,0,canvas.width,canvas.height); }catch(e){} };
+    frameImg.src='data:image/jpeg;base64,'+base64;
+  });
+  await ScreenCapture.startLiveStream();
+  const stream=canvas.captureStream(8); // matches the ~8fps the native side throttles frames to
+  const track=stream.getVideoTracks()[0];
+  const cleanup=async()=>{ try{await handle.remove();}catch(e){} try{await ScreenCapture.stopLiveStream();}catch(e){} };
+  if(track){
+    const origStop=track.stop.bind(track);
+    track.stop=()=>{ cleanup(); origStop(); };
+    track.addEventListener('ended',cleanup,{once:true});
+  }
+  stream._nativeCleanup=cleanup; // in case a caller stops the whole stream rather than the track
+  return stream;
 }
 
 /* ==========================================================================================

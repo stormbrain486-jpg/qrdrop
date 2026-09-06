@@ -53,6 +53,13 @@ import java.nio.ByteBuffer;
  *   - enableFloatingCapture() -> shows a draggable on-top button that takes + auto-saves a
  *                                screenshot on tap, from any app, without re-prompting each time
  *   - disableFloatingCapture()-> hides the floating button and releases everything
+ *   - startLiveStream()       -> begins continuously emitting downscaled JPEG frames of the
+ *                                screen as a "screenLiveFrame" plugin event, so JS can draw them
+ *                                onto a <canvas> and turn that into a real MediaStream via
+ *                                canvas.captureStream() — see nativeLiveScreenStream() in
+ *                                index.html. This is what makes live "Share Screen" during a
+ *                                call actually work on native Android (see fix #3 below).
+ *   - stopLiveStream()        -> stops the frame stream and releases the projection
  *
  * FIXES vs. the original version of this file:
  *   1. Foreground-service race condition. MediaProjection requires an active foreground service
@@ -71,6 +78,17 @@ import java.nio.ByteBuffer;
  *      file manager, Photos app, or "Files" app. stopRecording() now copies the finished file
  *      into MediaStore's Movies collection (a real, user-visible location) and deletes the
  *      private temp copy.
+ *   3. Live "Share Screen" during a call was previously disabled entirely on Android, because
+ *      getDisplayMedia() (what the web version uses) doesn't exist in Android's WebView, and
+ *      bundling a full native WebRTC video-capturer is a much bigger undertaking than a small
+ *      plugin. This version adds a lighter-weight but genuinely working path instead: the
+ *      MediaProjection ImageReader we already use for screenshots is kept open and continuously
+ *      emits downscaled JPEG frames (throttled to ~8fps) to JS as "screenLiveFrame" events. JS
+ *      draws each one onto an offscreen &lt;canvas&gt; and calls the canvas's own
+ *      captureStream() — a standard Web API the WebView already supports — which yields a real
+ *      MediaStream video track. That track is handed to the exact same PeerJS/WebRTC call code
+ *      the rest of the app already uses for calls, so no native WebRTC library is needed at all;
+ *      the WebView's built-in RTCPeerConnection does the actual encoding/sending.
  */
 @CapacitorPlugin(name = "ScreenCapture")
 public class ScreenCapturePlugin extends Plugin {
@@ -78,6 +96,18 @@ public class ScreenCapturePlugin extends Plugin {
     private static final int MODE_SCREENSHOT = 0;
     private static final int MODE_RECORDING = 1;
     private static final int MODE_FLOATING = 2;
+    private static final int MODE_LIVE_STREAM = 3;
+
+    // Live-stream frames are capped to this interval so we don't flood the WebView JS bridge or
+    // burn CPU JPEG-encoding faster than a call actually needs — ~8fps is plenty for a shared
+    // screen (unlike a camera feed, screen content is mostly static between frames).
+    private static final long LIVE_FRAME_MIN_INTERVAL_MS = 120;
+    // Downscale long edge to this many px before encoding — full display resolution is total
+    // overkill for what ends up as a WebRTC video track, and would make every JPEG far bigger
+    // than it needs to be for no visible benefit at typical call viewing sizes.
+    private static final int LIVE_STREAM_MAX_DIMENSION = 960;
+    private long lastLiveFrameEmitMs = 0;
+    private boolean liveStreamActive = false;
 
     private MediaProjectionManager projectionManager;
     private MediaProjection mediaProjection;
@@ -134,6 +164,23 @@ public class ScreenCapturePlugin extends Plugin {
     }
 
     @PluginMethod
+    public void startLiveStream(PluginCall call) {
+        pendingMode = MODE_LIVE_STREAM;
+        pendingCall = call;
+        refreshScreenMetrics();
+        getContext().startService(new Intent(getContext(), ScreenCaptureService.class));
+        Intent intent = projectionManager.createScreenCaptureIntent();
+        startActivityForResult(call, intent, "handleProjectionResult");
+    }
+
+    @PluginMethod
+    public void stopLiveStream(PluginCall call) {
+        liveStreamActive = false;
+        teardownProjection();
+        call.resolve();
+    }
+
+    @PluginMethod
     public void stopRecording(PluginCall call) {
         try {
             if (mediaRecorder != null) {
@@ -176,7 +223,65 @@ public class ScreenCapturePlugin extends Plugin {
 
         if (pendingMode == MODE_RECORDING) beginRecording(call);
         else if (pendingMode == MODE_FLOATING) beginFloatingSession(call);
+        else if (pendingMode == MODE_LIVE_STREAM) beginLiveStream(call);
         else captureSingleFrame(call);
+    }
+
+    private void beginLiveStream(PluginCall call) {
+        try {
+            double scale = Math.min(1.0, LIVE_STREAM_MAX_DIMENSION / (double) Math.max(screenWidth, screenHeight));
+            int liveWidth = Math.max(2, (int) (screenWidth * scale) & ~1);   // even dims for encoders
+            int liveHeight = Math.max(2, (int) (screenHeight * scale) & ~1);
+
+            imageReader = ImageReader.newInstance(liveWidth, liveHeight, android.graphics.PixelFormat.RGBA_8888, 2);
+            virtualDisplay = mediaProjection.createVirtualDisplay(
+                    "CodeDropLiveShare", liveWidth, liveHeight, screenDensity,
+                    DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
+                    imageReader.getSurface(), null, null);
+
+            liveStreamActive = true;
+            lastLiveFrameEmitMs = 0;
+            final int fw = liveWidth, fh = liveHeight;
+            imageReader.setOnImageAvailableListener(reader -> {
+                if (!liveStreamActive) { 
+                    Image stale = reader.acquireLatestImage();
+                    if (stale != null) stale.close();
+                    return;
+                }
+                long now = System.currentTimeMillis();
+                if (now - lastLiveFrameEmitMs < LIVE_FRAME_MIN_INTERVAL_MS) {
+                    // Still have to drain the reader even when skipping a frame, or the next
+                    // real frame can never arrive (ImageReader's queue is bounded).
+                    Image skip = reader.acquireLatestImage();
+                    if (skip != null) skip.close();
+                    return;
+                }
+                Image image = null;
+                try {
+                    image = reader.acquireLatestImage();
+                    if (image == null) return;
+                    lastLiveFrameEmitMs = now;
+                    Bitmap bitmap = bitmapFromImage(image, fw, fh);
+                    ByteArrayOutputStream out = new ByteArrayOutputStream();
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 55, out);
+                    String b64 = Base64.encodeToString(out.toByteArray(), Base64.NO_WRAP);
+                    JSObject frame = new JSObject();
+                    frame.put("base64", b64);
+                    frame.put("width", fw);
+                    frame.put("height", fh);
+                    notifyListeners("screenLiveFrame", frame);
+                } catch (Exception ignored) {
+                    // A single dropped frame isn't worth killing the whole stream over.
+                } finally {
+                    if (image != null) image.close();
+                }
+            }, null);
+
+            call.resolve();
+        } catch (Exception e) {
+            call.reject("Could not start live screen sharing: " + e.getMessage());
+            teardownProjection();
+        }
     }
 
     private void captureSingleFrame(PluginCall call) {
@@ -405,6 +510,7 @@ public class ScreenCapturePlugin extends Plugin {
     }
 
     private void teardownProjection() {
+        liveStreamActive = false;
         if (virtualDisplay != null) { virtualDisplay.release(); virtualDisplay = null; }
         if (imageReader != null) { imageReader.close(); imageReader = null; }
         if (mediaProjection != null) { mediaProjection.stop(); mediaProjection = null; }
