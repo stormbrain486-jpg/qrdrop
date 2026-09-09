@@ -779,7 +779,7 @@ input[type=file]{display:none;}
       <div class="dc-volume-row"><label for="dc-share-audio-volume">Screen Share Audio</label><input id="dc-share-audio-volume" type="range" min="0" max="200" value="100" step="1" oninput="setShareAudioVolume(this.value)"><output id="dc-share-audio-volume-value">100%</output></div>
       <div class="dc-call-status" id="dc-call-status"></div>
       <div class="dc-incoming-call" id="dc-incoming-call"><div class="call-info" id="dc-incoming-label">Incoming call…</div><div class="dc-incoming-actions"><button class="accept" onclick="acceptIncomingCall()">✓</button><button class="reject" onclick="rejectIncomingCall()">×</button></div></div>
-      <div class="dc-media-panel" id="dc-media-panel" onclick="handleMediaPanelTap(event)"><video class="dc-screenshare-video" id="dc-screenshare-video" autoplay playsinline></video><video class="dc-remote-video" id="dc-remote-video" autoplay playsinline></video><canvas id="dc-composite-canvas" style="display:none"></canvas><button class="dc-exit-fullscreen-btn" id="dc-exit-fullscreen-btn" onclick="toggleReceiverFullscreen()" title="Exit full screen">✕</button><div class="dc-remote-badges" id="dc-remote-badges"><span class="dc-mute-badge" id="dc-remote-mic-badge">🎙🚫 Friend muted mic</span><span class="dc-mute-badge" id="dc-remote-cam-badge">📷🚫 Friend camera off</span></div><div class="dc-local-video-wrap" id="dc-local-video-wrap"><video class="dc-local-video" id="dc-local-video" autoplay muted playsinline></video><span class="dc-mute-badge dc-badge-mic" id="dc-local-mic-badge">🎙🚫 Muted</span><span class="dc-mute-badge dc-badge-cam" id="dc-local-cam-badge">📷🚫 Camera off</span></div><div class="dc-media-label" id="dc-media-label">Friend</div><button class="dc-cam-bypass-btn" id="dc-cam-bypass-btn" onclick="event.stopPropagation();toggleCameraBypass()" title="Show your camera on top of your shared screen">📷 Show face on share</button><div class="dc-media-controls" onclick="event.stopPropagation()"><button onclick="toggleMicMute()" id="dc-media-mic-btn" title="Microphone">🎙 Mic</button><button onclick="toggleCameraMute()" id="dc-media-cam-btn" title="Camera">📷 Camera</button><button onclick="flipCallCamera('device')" id="dc-media-flip-btn" title="Switch camera">🔄 Flip</button><button onclick="toggleSpeakerMute()" id="dc-media-speaker-btn" title="Listen to friend">🔊 Listen</button><button onclick="endCallFromPanel()" id="dc-media-end-btn" class="dc-media-end-btn" title="End call">✕ End</button></div><div class="dc-audio-only" id="dc-audio-only"><span>🎙 Voice call active</span></div></div>
+      <div class="dc-media-panel" id="dc-media-panel" onclick="handleMediaPanelTap(event)"><video class="dc-screenshare-video" id="dc-screenshare-video" autoplay playsinline></video><video class="dc-remote-video" id="dc-remote-video" autoplay playsinline></video><canvas id="dc-composite-canvas" style="display:none"></canvas><button class="dc-exit-fullscreen-btn" id="dc-exit-fullscreen-btn" onclick="event.stopPropagation();toggleReceiverFullscreen()" title="Exit full screen">✕</button><div class="dc-remote-badges" id="dc-remote-badges"><span class="dc-mute-badge" id="dc-remote-mic-badge">🎙🚫 Friend muted mic</span><span class="dc-mute-badge" id="dc-remote-cam-badge">📷🚫 Friend camera off</span></div><div class="dc-local-video-wrap" id="dc-local-video-wrap"><video class="dc-local-video" id="dc-local-video" autoplay muted playsinline></video><span class="dc-mute-badge dc-badge-mic" id="dc-local-mic-badge">🎙🚫 Muted</span><span class="dc-mute-badge dc-badge-cam" id="dc-local-cam-badge">📷🚫 Camera off</span></div><div class="dc-media-label" id="dc-media-label">Friend</div><button class="dc-cam-bypass-btn" id="dc-cam-bypass-btn" onclick="event.stopPropagation();toggleCameraBypass()" title="Show your camera on top of your shared screen">📷 Show face on share</button><div class="dc-media-controls" onclick="event.stopPropagation()"><button onclick="toggleMicMute()" id="dc-media-mic-btn" title="Microphone">🎙 Mic</button><button onclick="toggleCameraMute()" id="dc-media-cam-btn" title="Camera">📷 Camera</button><button onclick="flipCallCamera('device')" id="dc-media-flip-btn" title="Switch camera">🔄 Flip</button><button onclick="toggleSpeakerMute()" id="dc-media-speaker-btn" title="Listen to friend">🔊 Listen</button><button onclick="endCallFromPanel()" id="dc-media-end-btn" class="dc-media-end-btn" title="End call">✕ End</button></div><div class="dc-audio-only" id="dc-audio-only"><span>🎙 Voice call active</span></div></div>
       <div class="ai-chat-log" id="dc-chat-log"></div>
       <div class="dc-chat-actions"><button class="dc-clear-btn" onclick="clearLocalChat()" title="Clear chat only on this device">🗑 Clear Chat</button></div>
       <div class="ai-chat-inputrow"><button class="dc-attach-btn" onclick="document.getElementById('dc-file-input').click()" aria-label="Send a file" title="Send a file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg></button><input type="file" id="dc-file-input"><button class="dc-attach-btn voice-message-btn" id="dc-voice-btn" onclick="toggleVoiceMessage()" aria-label="Record voice message" title="Record voice message"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="3" width="10" height="12" rx="5"/><path d="M5 11a7 7 0 0014 0M12 18v3M8 21h8"/></svg></button><textarea id="dc-chat-input" placeholder="Type a message…" rows="1"></textarea><button class="ai-send-btn" onclick="sendChatMessage()" aria-label="Send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></button></div>
@@ -1071,7 +1071,11 @@ input[type=file]{display:none;}
    never the file. The file always streams directly device-to-device.
    ============================================================ */
 
-const CHUNK_SIZE = 64 * 1024;
+// Bumped from 64KB to 256KB (matching the chunk size already used elsewhere in this file for
+// chat-attached files) — fewer, larger data-channel messages means less per-message overhead,
+// which matters more, not less, once traffic is going through a relay on a different Wi-Fi/
+// cellular network, where every extra round trip costs more than on a local link.
+const CHUNK_SIZE = 256 * 1024;
 const HIGH_WATER = 4 * 1024 * 1024;
 const LOW_WATER  = 1 * 1024 * 1024;
 const CODE_DIGITS = 8;
@@ -1196,7 +1200,11 @@ const ICE_CONFIG = {
     { urls: 'stun:stun1.l.google.com:19302' },
     { urls: 'stun:stun2.l.google.com:19302' },
     { urls: 'stun:stun.cloudflare.com:3478' },
-  ]
+  ],
+  // Pre-gathers a pool of ICE candidates before the offer/answer exchange even starts, so
+  // connecting to a device on a different Wi-Fi network (which almost always needs a relay
+  // candidate) doesn't have to wait for candidate gathering to begin from scratch.
+  iceCandidatePoolSize: 6,
 };
 // Adds a TURN relay on top of the STUN servers above. STUN alone can only help two devices
 // find each other's public address — it still needs a direct path between them, which many
@@ -1212,7 +1220,8 @@ const ICE_CONFIG_TURN = {
     { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
     { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
     { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' },
-  ]
+  ],
+  iceCandidatePoolSize: ICE_CONFIG.iceCandidatePoolSize,
   // NOTE: deliberately NOT setting iceTransportPolicy:'relay' here. openrelay.metered.ca is a
   // shared, rate-limited public demo TURN server — it's sometimes overloaded, blocked on some
   // networks, or briefly down. Forcing relay-only would make the connection depend entirely on
@@ -2026,33 +2035,67 @@ async function getVideoStream(){const q=qualitySettings();return navigator.media
    MediaStream + every active peer connection's sender via replaceTrack — the same technique
    already used for camera-bypass and mic-gain elsewhere in this file, so it doesn't renegotiate
    or interrupt audio. ---- */
-async function flipCallCamera(context){
-  const desired = cameraFacingMode==='user' ? 'environment' : 'user';
+async function listVideoInputDevices(){
   try{
-    const newStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:desired},audio:false});
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    return devices.filter(d=>d.kind==='videoinput');
+  }catch(e){ return []; }
+}
+async function flipCallCamera(context){
+  const activeStream = context==='meeting' ? mtLocalStream : dcLocalStream;
+  const oldTrack = activeStream?.getVideoTracks?.()[0];
+  const desired = cameraFacingMode==='user' ? 'environment' : 'user';
+  // BUGFIX (flip camera doing nothing, especially on desktop/laptop): relying on facingMode
+  // alone only works on phones. A laptop/desktop webcam has no meaningful facingMode, so a
+  // facingMode-only request just re-grants the same single camera and the button appears
+  // completely dead. Cycling through the enumerated camera list by deviceId instead works
+  // uniformly on phones (front/back) and on desktops/laptops with more than one webcam, and
+  // we only fall back to the facingMode hint if device enumeration isn't available at all.
+  let videoConstraint = {facingMode:desired};
+  try{
+    const cams = await listVideoInputDevices();
+    if(cams.length>1){
+      const curId = oldTrack?.getSettings?.().deviceId;
+      let idx = cams.findIndex(d=>d.deviceId===curId);
+      idx = (idx+1) % cams.length;
+      videoConstraint = {deviceId:{exact:cams[idx].deviceId}};
+    } else if(cams.length===1){
+      if(typeof setCallStatus==='function') setCallStatus('Your device only has one camera to switch to.');
+      return;
+    }
+  }catch(e){ /* enumeration unsupported/blocked — fall back to the facingMode request below */ }
+  try{
+    const newStream = await navigator.mediaDevices.getUserMedia({video:videoConstraint,audio:false});
     const newTrack = newStream.getVideoTracks()[0];
     if(!newTrack) return;
-    cameraFacingMode = desired;
+    const newSettings = newTrack.getSettings?.() || {};
+    cameraFacingMode = newSettings.facingMode || desired;
     if(context==='meeting'){
       if(mtLocalStream){
-        const oldTrack = mtLocalStream.getVideoTracks()[0];
+        const oldT = mtLocalStream.getVideoTracks()[0];
         mtLocalStream.addTrack(newTrack);
-        if(oldTrack){ mtLocalStream.removeTrack(oldTrack); oldTrack.stop(); }
+        if(oldT){ mtLocalStream.removeTrack(oldT); oldT.stop(); }
         for(const call of mtCalls.values()){
           const sender = call?.peerConnection?.getSenders?.().find(s=>s.track&&s.track.kind==='video');
           if(sender) await sender.replaceTrack(newTrack);
         }
+        // BUGFIX (flip works but the preview keeps showing the old camera): some browsers
+        // (notably iOS Safari) don't repaint a <video> when a track is swapped in/out of a
+        // MediaStream it's already displaying — force a reassignment so the preview updates.
+        document.querySelectorAll('#mt-tile-local video, #mt-local-cam-bubble video').forEach(v=>{ v.srcObject=null; v.srcObject=mtLocalStream; v.play?.().catch(()=>{}); });
       }
     } else {
       if(dcLocalStream){
-        const oldTrack = dcLocalStream.getVideoTracks()[0];
+        const oldT = dcLocalStream.getVideoTracks()[0];
         dcLocalStream.addTrack(newTrack);
-        if(oldTrack){ dcLocalStream.removeTrack(oldTrack); oldTrack.stop(); }
+        if(oldT){ dcLocalStream.removeTrack(oldT); oldT.stop(); }
         dcMediaTrack = newTrack;
         for(const call of dcMediaCalls.values()){
           const sender = call?.peerConnection?.getSenders?.().find(s=>s.track&&s.track.kind==='video');
           if(sender) await sender.replaceTrack(newTrack);
         }
+        const lv=document.getElementById('dc-local-video');
+        if(lv){ lv.srcObject=null; lv.srcObject=dcLocalStream; lv.play?.().catch(()=>{}); }
       }
     }
   }catch(e){
@@ -2088,15 +2131,43 @@ let dcMicGainNode=null,dcMicGainSource=null,dcMicGainDestination=null,dcMicProce
 async function applyMicGain(){if(!dcLocalStream||!window.AudioContext)return;const track=dcLocalStream.getAudioTracks()[0];if(!track||track===dcMicProcessedTrack&&dcMicGainSource)return;try{if(dcMicGainSource)dcMicGainSource.disconnect();if(dcMicGainNode)dcMicGainNode.disconnect();if(dcMicGainDestination)dcMicGainDestination.disconnect();const Ctx=window.AudioContext||window.webkitAudioContext;const ctx=dcAudioContext||(dcAudioContext=new Ctx());dcMicGainSource=ctx.createMediaStreamSource(new MediaStream([track]));dcMicGainNode=ctx.createGain();dcMicGainDestination=ctx.createMediaStreamDestination();dcMicGainNode.gain.value=dcMicGainValue;dcMicGainSource.connect(dcMicGainNode).connect(dcMicGainDestination);const processed=dcMicGainDestination.stream.getAudioTracks()[0];if(processed&&dcLocalStream&&track!==processed){dcLocalStream.removeTrack(track);dcLocalStream.addTrack(processed)}for(const call of dcMediaCalls.values()){const sender=call?.peerConnection?.getSenders?.().find(x=>x.track?.kind==='audio');if(sender)await sender.replaceTrack(processed)}dcMicProcessedTrack=processed}catch(e){}}
 function setMicVolume(v){dcMicGainValue=Math.max(0,Number(v)/100);const n=document.getElementById('dc-mic-volume-value');if(n)n.value=Math.round(dcMicGainValue*100)+'%';if(n)n.textContent=Math.round(dcMicGainValue*100)+'%';if(dcMicGainNode)dcMicGainNode.gain.value=dcMicGainValue;else if(dcLocalStream)applyMicGain()}
 function getRemoteMediaElement(){return document.getElementById('dc-remote-video')}
-function setSpeakerVolume(v){dcSpeakerVolume=Math.max(0,Math.min(2,Number(v)/100));const n=document.getElementById('dc-speaker-volume-value');if(n)n.textContent=Math.round(dcSpeakerVolume*100)+'%';const remote=getRemoteMediaElement();if(remote){remote.volume=Math.min(1,dcSpeakerVolume);remote.muted=dcSpeakerMuted||dcSpeakerVolume===0}}
-function setShareAudioVolume(v){dcShareAudioVolume=Math.max(0,Math.min(2,Number(v)/100));const n=document.getElementById('dc-share-audio-volume-value');if(n)n.textContent=Math.round(dcShareAudioVolume*100)+'%';const sv=document.getElementById('dc-screenshare-video');if(sv){sv.volume=Math.min(1,dcShareAudioVolume);sv.muted=dcSpeakerMuted||dcShareAudioVolume===0}}
+/* ---- BUGFIX (volume sliders that go to 200% but stop having any effect past 100%):
+   HTMLMediaElement.volume is spec-capped at 1.0 — setting it higher is silently clamped by
+   the browser, so the top half of every "up to 200%" slider did nothing at all, even though
+   the label kept counting up. Routing the element through a Web Audio GainNode (the same
+   technique this file already uses for the mic-volume slider) lets the gain genuinely exceed
+   1.0, so these sliders now actually boost the volume the way their UI promises. ---- */
+let __outputAudioCtx=null;
+const __elementGainNodes=new WeakMap();
+function getOutputGainNode(el){
+  if(!el) return null;
+  if(__elementGainNodes.has(el)) return __elementGainNodes.get(el);
+  try{
+    const Ctx=window.AudioContext||window.webkitAudioContext;
+    const ctx=__outputAudioCtx||(__outputAudioCtx=new Ctx());
+    const source=ctx.createMediaElementSource(el);
+    const gain=ctx.createGain();
+    source.connect(gain).connect(ctx.destination);
+    el.volume=1; el.muted=false; // once routed through Web Audio, the element's own volume/muted no longer affect what's audible — gain.value is the only control from here on
+    __elementGainNodes.set(el,gain);
+    return gain;
+  }catch(e){ return null; }
+}
+function setElementVolume(el,volume,muted){
+  if(!el) return;
+  const gain=getOutputGainNode(el);
+  if(gain){ gain.gain.value = muted?0:volume; }
+  else { el.volume=Math.min(1,volume); el.muted=muted||volume===0; } // fallback if Web Audio routing couldn't be set up
+}
+function setSpeakerVolume(v){dcSpeakerVolume=Math.max(0,Math.min(2,Number(v)/100));const n=document.getElementById('dc-speaker-volume-value');if(n)n.textContent=Math.round(dcSpeakerVolume*100)+'%';setElementVolume(getRemoteMediaElement(),dcSpeakerVolume,dcSpeakerMuted);}
+function setShareAudioVolume(v){dcShareAudioVolume=Math.max(0,Math.min(2,Number(v)/100));const n=document.getElementById('dc-share-audio-volume-value');if(n)n.textContent=Math.round(dcShareAudioVolume*100)+'%';setElementVolume(document.getElementById('dc-screenshare-video'),dcShareAudioVolume,dcSpeakerMuted);}
 let dcCamMuted=false;
 function toggleMicMute(){dcMicMuted=!dcMicMuted;if(dcLocalStream){dcLocalStream.getAudioTracks().forEach(t=>t.enabled=!dcMicMuted)}const b=document.getElementById('dc-mic-toggle');if(b){b.classList.toggle('active',!dcMicMuted);b.classList.toggle('muted',dcMicMuted);b.textContent=dcMicMuted?'🎙 Mic Muted':'🎙 Mic On'}const mb=document.getElementById('dc-media-mic-btn');if(mb){mb.classList.toggle('muted',dcMicMuted);mb.textContent=dcMicMuted?'🎙🚫 Muted':'🎙 Mic'}updateLocalMuteBadges();broadcastMuteState()}
 function toggleCameraMute(){dcCamMuted=!dcCamMuted;if(dcLocalStream){dcLocalStream.getVideoTracks().forEach(t=>t.enabled=!dcCamMuted)}const b=document.getElementById('dc-cam-toggle');if(b){b.classList.toggle('active',!dcCamMuted);b.classList.toggle('muted',dcCamMuted);b.textContent=dcCamMuted?'📷 Camera Off':'📷 Camera On'}const mb=document.getElementById('dc-media-cam-btn');if(mb){mb.classList.toggle('muted',dcCamMuted);mb.textContent=dcCamMuted?'📷🚫 Off':'📷 Camera'}updateLocalMuteBadges();broadcastMuteState()}
 function updateLocalMuteBadges(){const mic=document.getElementById('dc-local-mic-badge'),cam=document.getElementById('dc-local-cam-badge');if(mic)mic.classList.toggle('show',dcMicMuted);if(cam)cam.classList.toggle('show',dcCamMuted&&dcMediaKind!=='voice')}
 function updateRemoteMuteBadges(micMuted,camMuted){const mic=document.getElementById('dc-remote-mic-badge'),cam=document.getElementById('dc-remote-cam-badge');if(mic)mic.classList.toggle('show',!!micMuted);if(cam)cam.classList.toggle('show',!!camMuted)}
 function broadcastMuteState(){for(const [,c] of dcConns){if(c.open)try{c.send({type:'call-mute-state',mic:dcMicMuted,cam:dcCamMuted})}catch(e){}}}
-async function toggleSpeakerMute(){dcSpeakerMuted=!dcSpeakerMuted;const remote=getRemoteMediaElement();if(remote){remote.muted=dcSpeakerMuted||dcSpeakerVolume===0;remote.volume=Math.min(1,dcSpeakerVolume)}const sv=document.getElementById('dc-screenshare-video');if(sv){sv.muted=dcSpeakerMuted||dcShareAudioVolume===0}const b=document.getElementById('dc-speaker-toggle');if(b){b.classList.toggle('active',!dcSpeakerMuted);b.classList.toggle('muted',dcSpeakerMuted);b.textContent=dcSpeakerMuted?'🔇 Speaker Muted':'🔊 Speaker On'}const mb=document.getElementById('dc-media-speaker-btn');if(mb){mb.classList.toggle('muted',dcSpeakerMuted);mb.textContent=dcSpeakerMuted?'🔇 Muted':'🔊 Listen'}}
+async function toggleSpeakerMute(){dcSpeakerMuted=!dcSpeakerMuted;setElementVolume(getRemoteMediaElement(),dcSpeakerVolume,dcSpeakerMuted);setElementVolume(document.getElementById('dc-screenshare-video'),dcShareAudioVolume,dcSpeakerMuted);const b=document.getElementById('dc-speaker-toggle');if(b){b.classList.toggle('active',!dcSpeakerMuted);b.classList.toggle('muted',dcSpeakerMuted);b.textContent=dcSpeakerMuted?'🔇 Speaker Muted':'🔊 Speaker On'}const mb=document.getElementById('dc-media-speaker-btn');if(mb){mb.classList.toggle('muted',dcSpeakerMuted);mb.textContent=dcSpeakerMuted?'🔇 Muted':'🔊 Listen'}}
 function currentFullscreenEl(){return document.fullscreenElement||document.webkitFullscreenElement||document.msFullscreenElement||null}
 function toggleReceiverFullscreen(){
   const panel=document.getElementById('dc-media-panel'),video=getRemoteMediaElement();
@@ -2985,16 +3056,190 @@ async function runZipAction(){
   }
   goBtn.disabled=false;
 }
+/* ---- BUGFIX (large zips, e.g. 10GB, fail to unzip): the previous code always called
+   JSZip.loadAsync(zipFiles[0]) first, even on the "streaming" path below it. JSZip's loadAsync
+   has to read the ENTIRE archive into a single in-memory ArrayBuffer to parse it — for a 10GB
+   file that alone is enough to exhaust a tab's memory (or exceed engine ArrayBuffer limits) and
+   fail before a single byte is ever extracted. The per-file streaming further down was real,
+   but it was already too late.
+   The functions below parse just the zip's End-Of-Central-Directory record and central
+   directory listing (a tiny amount of data even for a huge archive — usually well under a
+   few MB), including the Zip64 variants used by archives over 4GB, then extract each entry by
+   reading only that entry's own byte range out of the file (Blob.slice is free — it doesn't
+   copy anything into memory) and inflating it on the fly with the browser's native
+   DecompressionStream. Nothing this app can control ever holds more than one chunk of one
+   file in memory at a time, so archive size is no longer the limiting factor — free disk
+   space is. ---- */
+async function readBlobRange(blob,start,end){
+  return new Uint8Array(await blob.slice(start,end).arrayBuffer());
+}
+function readUint64LE(dv,offset){
+  const lo=dv.getUint32(offset,true), hi=dv.getUint32(offset+4,true);
+  return hi*4294967296+lo; // exact for anything under ~8 petabytes — plenty for a zip file
+}
+async function findZipEOCD(file){
+  const maxCommentLen=65535;
+  const searchLen=Math.min(file.size,22+maxCommentLen);
+  const tailStart=file.size-searchLen;
+  const tail=await readBlobRange(file,tailStart,file.size);
+  for(let i=tail.length-22;i>=0;i--){
+    if(tail[i]===0x50&&tail[i+1]===0x4b&&tail[i+2]===0x05&&tail[i+3]===0x06){
+      const dv=new DataView(tail.buffer,tail.byteOffset+i,22);
+      return{
+        cdSize:dv.getUint32(12,true),
+        cdOffset:dv.getUint32(16,true),
+        totalEntries:dv.getUint16(10,true),
+        eocdOffsetInFile:tailStart+i,
+      };
+    }
+  }
+  throw new Error("Not a valid zip file (couldn't find its end-of-central-directory record)");
+}
+async function findZip64EOCD(file,eocdOffsetInFile){
+  const locStart=eocdOffsetInFile-20;
+  if(locStart<0)return null;
+  const loc=await readBlobRange(file,locStart,locStart+20);
+  const dv=new DataView(loc.buffer,loc.byteOffset,20);
+  if(dv.getUint32(0,true)!==0x07064b50)return null;
+  const zip64EocdOffset=readUint64LE(dv,8);
+  const rec=await readBlobRange(file,zip64EocdOffset,zip64EocdOffset+56);
+  const dv2=new DataView(rec.buffer,rec.byteOffset,56);
+  if(dv2.getUint32(0,true)!==0x06064b50)throw new Error('Invalid Zip64 end-of-central-directory record');
+  return{ totalEntries:readUint64LE(dv2,32), cdSize:readUint64LE(dv2,40), cdOffset:readUint64LE(dv2,48) };
+}
+async function readZipCentralDirectory(file){
+  const eocd=await findZipEOCD(file);
+  let{cdSize,cdOffset,totalEntries}=eocd;
+  if(cdOffset===0xFFFFFFFF||cdSize===0xFFFFFFFF||totalEntries===0xFFFF){
+    const z64=await findZip64EOCD(file,eocd.eocdOffsetInFile);
+    if(z64){ cdSize=z64.cdSize; cdOffset=z64.cdOffset; totalEntries=z64.totalEntries; }
+  }
+  const cdBytes=await readBlobRange(file,cdOffset,cdOffset+cdSize);
+  const dv=new DataView(cdBytes.buffer,cdBytes.byteOffset,cdBytes.byteLength);
+  const dec=new TextDecoder('utf-8');
+  const entries=[];
+  let p=0;
+  for(let i=0;i<totalEntries;i++){
+    if(p+46>cdBytes.byteLength||dv.getUint32(p,true)!==0x02014b50)break; // stop cleanly if the count looks off rather than reading garbage
+    const method=dv.getUint16(p+10,true);
+    let compSize=dv.getUint32(p+20,true);
+    let uncompSize=dv.getUint32(p+24,true);
+    const nameLen=dv.getUint16(p+28,true);
+    const extraLen=dv.getUint16(p+30,true);
+    const commentLen=dv.getUint16(p+32,true);
+    let localOffset=dv.getUint32(p+42,true);
+    const nameStart=p+46;
+    const name=dec.decode(cdBytes.subarray(nameStart,nameStart+nameLen));
+    const extraStart=nameStart+nameLen, extraEnd=extraStart+extraLen;
+    let ep=extraStart;
+    while(ep+4<=extraEnd){
+      const tag=dv.getUint16(ep,true), tlen=dv.getUint16(ep+2,true);
+      if(tag===0x0001){ // Zip64 extended info — only the fields that were originally 0xFFFFFFFF are present, in this order
+        let zp=ep+4;
+        if(uncompSize===0xFFFFFFFF&&zp+8<=extraEnd){ uncompSize=readUint64LE(dv,zp); zp+=8; }
+        if(compSize===0xFFFFFFFF&&zp+8<=extraEnd){ compSize=readUint64LE(dv,zp); zp+=8; }
+        if(localOffset===0xFFFFFFFF&&zp+8<=extraEnd){ localOffset=readUint64LE(dv,zp); zp+=8; }
+      }
+      ep+=4+tlen;
+    }
+    entries.push({name,method,compressedSize:compSize,uncompressedSize:uncompSize,localHeaderOffset:localOffset,isDir:name.endsWith('/')});
+    p=nameStart+nameLen+extraLen+commentLen;
+  }
+  return entries;
+}
+async function extractZipEntryStream(file,entry){
+  const head=await readBlobRange(file,entry.localHeaderOffset,entry.localHeaderOffset+30);
+  const dv=new DataView(head.buffer,head.byteOffset,30);
+  if(dv.getUint32(0,true)!==0x04034b50)throw new Error('Corrupt zip entry: '+entry.name);
+  const nameLen=dv.getUint16(26,true), extraLen=dv.getUint16(28,true);
+  const dataStart=entry.localHeaderOffset+30+nameLen+extraLen;
+  const dataBlob=file.slice(dataStart,dataStart+entry.compressedSize);
+  if(entry.method===0)return dataBlob.stream(); // stored, no compression
+  if(entry.method===8){
+    if(typeof DecompressionStream==='undefined')throw new Error("This browser can't inflate zip entries — try a recent Chrome, Edge, Firefox, or Safari.");
+    return dataBlob.stream().pipeThrough(new DecompressionStream('deflate-raw'));
+  }
+  throw new Error('Unsupported compression method in "'+entry.name+'" — only Store and Deflate are supported.');
+}
+const ZIP_LEGACY_FALLBACK_LIMIT=1.5*1024*1024*1024; // above this, don't even try the whole-file-in-memory fallback
 async function runUnzip(status,list){
   status.textContent='Reading zip index…';
-  // Pass the File directly (Blob) instead of pre-loading it fully with FileReader —
-  // JSZip then only pulls bytes off disk as it needs them.
+  let entries;
+  try{
+    entries=(await readZipCentralDirectory(zipFiles[0])).filter(e=>!e.isDir&&e.name);
+  }catch(parseErr){
+    if(zipFiles[0].size>ZIP_LEGACY_FALLBACK_LIMIT){
+      status.textContent="Couldn't read this zip's index ("+(parseErr&&parseErr.message?parseErr.message:'unknown error')+') and the file is too large to fall back to loading it all into memory.';
+      return;
+    }
+    return runUnzipLegacy(status,list);
+  }
+  if(!entries.length){status.textContent='No files found inside that zip.';return}
+  if(typeof DecompressionStream==='undefined'&&entries.some(e=>e.method===8)){
+    if(zipFiles[0].size>ZIP_LEGACY_FALLBACK_LIMIT){
+      status.textContent="This browser can't extract compressed zip entries this large — try a recent Chrome, Edge, Firefox, or Safari.";
+      return;
+    }
+    return runUnzipLegacy(status,list);
+  }
+  if(window.showDirectoryPicker){
+    // Stream every entry straight to a chosen folder on disk, one at a time — memory use stays
+    // flat (one chunk of one file at a time) no matter how large the archive is.
+    let dirHandle;
+    try{ dirHandle=await window.showDirectoryPicker({mode:'readwrite'}); }
+    catch(e){ if(e.name==='AbortError'){status.textContent='';return} throw e; }
+    status.textContent='Extracting 0 / '+entries.length+' file(s)…';
+    let done=0;
+    for(const entry of entries){
+      const parts=entry.name.split('/').filter(Boolean);
+      const fname=parts.pop();
+      let dir=dirHandle;
+      for(const p of parts)dir=await dir.getDirectoryHandle(p,{create:true});
+      const fileHandle=await dir.getFileHandle(fname,{create:true});
+      const writable=await fileHandle.createWritable();
+      const stream=await extractZipEntryStream(zipFiles[0],entry);
+      const reader=stream.getReader();
+      while(true){
+        const{done:rdone,value}=await reader.read();
+        if(rdone)break;
+        await writable.write(value);
+      }
+      await writable.close();
+      done++; status.textContent='Extracting '+done+' / '+entries.length+' file(s)…';
+      const item=document.createElement('div');
+      item.className='tools-result-item';
+      item.innerHTML='<span>📄</span><span class="name">'+escapeHtml(entry.name)+'</span><span>Saved</span>';
+      list.appendChild(item);
+    }
+    status.textContent='Done — extracted '+entries.length+' file(s) straight to the folder you picked.';
+  }else{
+    // Fallback for browsers without the File System Access API: per-file download links, still
+    // built one file at a time via the streaming extractor above rather than loading everything
+    // at once.
+    status.textContent=entries.length+' file(s) found:';
+    for(const entry of entries){
+      const stream=await extractZipEntryStream(zipFiles[0],entry);
+      const blob=await new Response(stream).blob();
+      const url=URL.createObjectURL(blob);
+      const item=document.createElement('div');
+      item.className='tools-result-item';
+      item.innerHTML='<span>📄</span><span class="name">'+escapeHtml(entry.name)+'</span><span>'+fmtBytesBig(blob.size)+'</span>';
+      const dl=document.createElement('button');
+      dl.textContent='Download';
+      dl.onclick=()=>{const a=document.createElement('a');a.href=url;a.download=entry.name.split('/').pop();document.body.appendChild(a);a.click();document.body.removeChild(a)};
+      item.appendChild(dl);
+      list.appendChild(item);
+    }
+  }
+}
+/* Old whole-archive-in-memory path — kept only as a fallback for zips our lightweight parser
+   can't make sense of (unusual/corrupt files) or browsers without DecompressionStream, and
+   only ever used below ZIP_LEGACY_FALLBACK_LIMIT where holding it all in RAM is reasonable. */
+async function runUnzipLegacy(status,list){
   const zip=await JSZip.loadAsync(zipFiles[0]);
   const names=Object.keys(zip.files).filter(n=>!zip.files[n].dir);
   if(!names.length){status.textContent='No files found inside that zip.';return}
   if(window.showDirectoryPicker){
-    // Stream every entry straight to a chosen folder on disk, one at a time, so memory use
-    // stays flat no matter how large the archive or its individual files are.
     let dirHandle;
     try{ dirHandle=await window.showDirectoryPicker({mode:'readwrite'}); }
     catch(e){ if(e.name==='AbortError'){status.textContent='';return} throw e; }
@@ -3023,8 +3268,6 @@ async function runUnzip(status,list){
     }
     status.textContent='Done — extracted '+names.length+' file(s) straight to the folder you picked.';
   }else{
-    // Fallback for browsers without the File System Access API: per-file download links,
-    // same as before (fine up to the device's available RAM).
     status.textContent=names.length+' file(s) found:';
     for(const name of names){
       const blob=await zip.files[name].async('blob');
@@ -4656,7 +4899,7 @@ let mtShareAudioVolume=1;
 function setMtScreenAudioVolume(v){
   mtShareAudioVolume=Math.max(0,Math.min(2,Number(v)/100));
   const n=document.getElementById('mt-screen-audio-volume-value'); if(n)n.textContent=Math.round(mtShareAudioVolume*100)+'%';
-  const sv=document.getElementById('mt-screen-video'); if(sv){ sv.volume=Math.min(1,mtShareAudioVolume); sv.muted=mtShareAudioVolume===0; }
+  setElementVolume(document.getElementById('mt-screen-video'), mtShareAudioVolume, mtShareAudioVolume===0);
 }
 let mtMicGainNode=null,mtMicGainSource=null,mtMicGainDestination=null,mtMicProcessedTrack=null,mtMicGainValue=1,mtAudioContext=null;
 async function applyMtMicGain(){
@@ -4689,7 +4932,7 @@ let mtParticipantsVolume=1;
 function setMtParticipantsVolume(v){
   mtParticipantsVolume=Math.max(0,Math.min(2,Number(v)/100));
   const n=document.getElementById('mt-participants-volume-value'); if(n)n.textContent=Math.round(mtParticipantsVolume*100)+'%';
-  document.querySelectorAll('#mt-grid .mt-tile video').forEach(v=>{ if(!v.muted){ v.volume=Math.min(1,mtParticipantsVolume); } });
+  document.querySelectorAll('#mt-grid .mt-tile video').forEach(vid=>{ if(vid!==document.querySelector('#mt-tile-local video')){ setElementVolume(vid, mtParticipantsVolume, false); } });
 }
 
 /* ---- meeting: full screen for the shared screen, with a mobile rotate-to-fill + a visible exit (✕) button ---- */
@@ -4839,24 +5082,46 @@ async function openCamCapture(){
   document.getElementById('cam-result').style.display='none';
   await restartCamPreview();
 }
-async function restartCamPreview(){
+async function restartCamPreview(forceVideoConstraint){
   if(camStream){ camStream.getTracks().forEach(t=>t.stop()); camStream=null; }
   const q=camQualityConstraint();
+  const baseVideo = forceVideoConstraint || {facingMode:cameraFacingMode};
   try{
-    camStream=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:q.width},height:{ideal:q.height},facingMode:cameraFacingMode},audio:true});
+    camStream=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:q.width},height:{ideal:q.height},...baseVideo},audio:true});
   }catch(e){
-    try{ camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:cameraFacingMode},audio:true}); }
+    try{ camStream=await navigator.mediaDevices.getUserMedia({video:baseVideo,audio:true}); }
     catch(e2){
       try{ camStream=await navigator.mediaDevices.getUserMedia({video:true,audio:true}); }
       catch(e3){ alert('Could not access the camera — permission may have been denied.'); return; }
     }
   }
+  const track=camStream.getVideoTracks()[0];
+  if(track){ const s=track.getSettings?.()||{}; if(s.facingMode) cameraFacingMode=s.facingMode; }
   const v=document.getElementById('cam-capture-video'); v.srcObject=camStream; v.play?.().catch(()=>{});
 }
 /* Switch the Camera-capture-modal's preview between front and rear. Kept as its own
    function (rather than reusing flipCallCamera) because this modal has no active
-   RTCPeerConnection to replaceTrack() on — it just needs to restart the local preview. */
-function flipCamCapture(){
+   RTCPeerConnection to replaceTrack() on — it just needs to restart the local preview.
+   BUGFIX (flip does nothing on desktop/laptop): a plain facingMode toggle only means
+   anything on phones. Desktop/laptop webcams don't report a facingMode, so toggling it
+   just re-opens the same single camera. Cycle through the enumerated camera list by
+   deviceId instead — that works on phones and on desktops/laptops with more than one
+   webcam, falling back to the facingMode hint only when enumeration isn't available. */
+async function flipCamCapture(){
+  const curTrack=camStream?.getVideoTracks?.()[0];
+  try{
+    const cams=await listVideoInputDevices();
+    if(cams.length>1){
+      const curId=curTrack?.getSettings?.().deviceId;
+      let idx=cams.findIndex(d=>d.deviceId===curId);
+      idx=(idx+1)%cams.length;
+      await restartCamPreview({deviceId:{exact:cams[idx].deviceId}});
+      return;
+    } else if(cams.length===1){
+      alert('Your device only has one camera to switch to.');
+      return;
+    }
+  }catch(e){ /* enumeration unsupported — fall back below */ }
   cameraFacingMode = cameraFacingMode==='user' ? 'environment' : 'user';
   restartCamPreview();
 }
