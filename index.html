@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover">
 <title>QRDrop</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.5/peerjs.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -38,7 +38,7 @@ body{
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
   -webkit-font-smoothing:antialiased; transition:background .35s ease,color .35s ease; overflow-x:hidden;
 }
-#app{ min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:20px 20px 40px; }
+#app{ min-height:100vh; min-height:100dvh; display:flex; flex-direction:column; align-items:center; padding:20px 20px calc(40px + env(safe-area-inset-bottom)); padding-left:calc(20px + env(safe-area-inset-left)); padding-right:calc(20px + env(safe-area-inset-right)); }
 .topbar{ width:100%; max-width:1000px; display:flex; align-items:center; justify-content:space-between; padding:6px 4px 18px; }
 .brand{ display:flex; align-items:center; gap:10px; cursor:pointer; }
 .brand-mark{ width:34px;height:34px;border-radius:10px; background:linear-gradient(135deg,var(--accent),#8AA9FF); display:flex;align-items:center;justify-content:center; flex-shrink:0; }
@@ -68,15 +68,6 @@ body{
 .status-dot.off{background:var(--bad);}
 .status-pill.pulsing .status-dot{animation:pulse 1.6s infinite;}
 @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:0.35;} }
-.cross-network-toggle{ margin-top:14px; display:flex; align-items:center; gap:12px; padding:12px 16px; border-radius:14px; background:var(--surface); border:1px solid var(--border); cursor:pointer; width:100%; max-width:360px; text-align:left; font-family:inherit; }
-.cross-network-toggle:active{transform:scale(0.99);}
-.cnt-switch{ flex-shrink:0; width:40px; height:24px; border-radius:999px; background:var(--border); position:relative; transition:background 0.15s ease; }
-.cnt-switch::after{ content:''; position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,0.25); transition:transform 0.15s ease; }
-.cross-network-toggle[aria-pressed="true"] .cnt-switch{ background:var(--accent); }
-.cross-network-toggle[aria-pressed="true"] .cnt-switch::after{ transform:translateX(16px); }
-.cnt-label{display:flex;flex-direction:column;gap:1px;}
-.cnt-title{font-size:14px;font-weight:700;color:var(--text);}
-.cnt-sub{font-size:12px;color:var(--text-muted);}
 .panel{ width:100%; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:28px; box-shadow:var(--shadow); }
 .panel-header{ display:flex;align-items:center;gap:14px;margin-bottom:22px; }
 .back-btn{ width:38px;height:38px;border-radius:50%; border:1px solid var(--border);background:var(--surface-2); display:flex;align-items:center;justify-content:center; cursor:pointer;color:var(--text);flex-shrink:0; }
@@ -168,10 +159,6 @@ input[type=file]{display:none;}
 .mini-badge{font-size:11.5px;font-weight:700;color:var(--good);background:var(--good-soft);padding:5px 10px;border-radius:999px;}
 
 /* ==== ADDED: floating corner actions (AI chat + device-to-device chat) ==== */
-.home-tools{display:flex;justify-content:center;align-items:stretch;gap:9px;flex-wrap:wrap;margin:0 auto 16px;max-width:560px;}
-.home-tool-btn{min-width:150px;flex:1;padding:12px 14px;border:1px solid var(--border);border-radius:13px;background:var(--surface);color:var(--text);font-weight:900;font-size:12px;cursor:pointer;box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;gap:8px;}
-.home-tool-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;}
-.home-tool-btn svg{width:19px;height:19px;flex:0 0 auto;}
 .home-name-box{display:flex;align-items:center;gap:8px;width:min(560px,100%);box-sizing:border-box;margin:0 auto 18px;padding:8px 10px;border:1px solid var(--border);border-radius:13px;background:var(--surface-2);}
 .home-name-box label{font-size:11px;font-weight:900;color:var(--text-muted);white-space:nowrap;}
 .home-name-input{flex:1;min-width:0;border:0;outline:0;background:transparent;color:var(--text);font:700 13px inherit;}
@@ -792,7 +779,7 @@ input[type=file]{display:none;}
       <div class="dc-volume-row"><label for="dc-share-audio-volume">Screen Share Audio</label><input id="dc-share-audio-volume" type="range" min="0" max="200" value="100" step="1" oninput="setShareAudioVolume(this.value)"><output id="dc-share-audio-volume-value">100%</output></div>
       <div class="dc-call-status" id="dc-call-status"></div>
       <div class="dc-incoming-call" id="dc-incoming-call"><div class="call-info" id="dc-incoming-label">Incoming call…</div><div class="dc-incoming-actions"><button class="accept" onclick="acceptIncomingCall()">✓</button><button class="reject" onclick="rejectIncomingCall()">×</button></div></div>
-      <div class="dc-media-panel" id="dc-media-panel" onclick="handleMediaPanelTap(event)"><video class="dc-screenshare-video" id="dc-screenshare-video" autoplay playsinline></video><video class="dc-remote-video" id="dc-remote-video" autoplay playsinline></video><canvas id="dc-composite-canvas" style="display:none"></canvas><button class="dc-exit-fullscreen-btn" id="dc-exit-fullscreen-btn" onclick="toggleReceiverFullscreen()" title="Exit full screen">✕</button><div class="dc-remote-badges" id="dc-remote-badges"><span class="dc-mute-badge" id="dc-remote-mic-badge">🎙🚫 Friend muted mic</span><span class="dc-mute-badge" id="dc-remote-cam-badge">📷🚫 Friend camera off</span></div><div class="dc-local-video-wrap" id="dc-local-video-wrap"><video class="dc-local-video" id="dc-local-video" autoplay muted playsinline></video><span class="dc-mute-badge dc-badge-mic" id="dc-local-mic-badge">🎙🚫 Muted</span><span class="dc-mute-badge dc-badge-cam" id="dc-local-cam-badge">📷🚫 Camera off</span></div><div class="dc-media-label" id="dc-media-label">Friend</div><button class="dc-cam-bypass-btn" id="dc-cam-bypass-btn" onclick="event.stopPropagation();toggleCameraBypass()" title="Show your camera on top of your shared screen">📷 Show face on share</button><div class="dc-media-controls" onclick="event.stopPropagation()"><button onclick="toggleMicMute()" id="dc-media-mic-btn" title="Microphone">🎙 Mic</button><button onclick="toggleCameraMute()" id="dc-media-cam-btn" title="Camera">📷 Camera</button><button onclick="flipCallCamera('device')" id="dc-media-flip-btn" title="Switch camera">🔄 Flip</button><button onclick="toggleSpeakerMute()" id="dc-media-speaker-btn" title="Listen to friend">🔊 Listen</button><button onclick="endCallFromPanel()" id="dc-media-end-btn" class="dc-media-end-btn" title="End call">✕ End</button></div><div class="dc-audio-only" id="dc-audio-only"><span>🎙 Voice call active</span></div></div>
+      <div class="dc-media-panel" id="dc-media-panel" onclick="handleMediaPanelTap(event)"><video class="dc-screenshare-video" id="dc-screenshare-video" autoplay playsinline></video><video class="dc-remote-video" id="dc-remote-video" autoplay playsinline></video><canvas id="dc-composite-canvas" style="display:none"></canvas><button class="dc-exit-fullscreen-btn" id="dc-exit-fullscreen-btn" onclick="event.stopPropagation();toggleReceiverFullscreen()" title="Exit full screen">✕</button><div class="dc-remote-badges" id="dc-remote-badges"><span class="dc-mute-badge" id="dc-remote-mic-badge">🎙🚫 Friend muted mic</span><span class="dc-mute-badge" id="dc-remote-cam-badge">📷🚫 Friend camera off</span></div><div class="dc-local-video-wrap" id="dc-local-video-wrap"><video class="dc-local-video" id="dc-local-video" autoplay muted playsinline></video><span class="dc-mute-badge dc-badge-mic" id="dc-local-mic-badge">🎙🚫 Muted</span><span class="dc-mute-badge dc-badge-cam" id="dc-local-cam-badge">📷🚫 Camera off</span></div><div class="dc-media-label" id="dc-media-label">Friend</div><button class="dc-cam-bypass-btn" id="dc-cam-bypass-btn" onclick="event.stopPropagation();toggleCameraBypass()" title="Show your camera on top of your shared screen">📷 Show face on share</button><div class="dc-media-controls" onclick="event.stopPropagation()"><button onclick="toggleMicMute()" id="dc-media-mic-btn" title="Microphone">🎙 Mic</button><button onclick="toggleCameraMute()" id="dc-media-cam-btn" title="Camera">📷 Camera</button><button onclick="flipCallCamera('device')" id="dc-media-flip-btn" title="Switch camera">🔄 Flip</button><button onclick="toggleSpeakerMute()" id="dc-media-speaker-btn" title="Listen to friend">🔊 Listen</button><button onclick="endCallFromPanel()" id="dc-media-end-btn" class="dc-media-end-btn" title="End call">✕ End</button></div><div class="dc-audio-only" id="dc-audio-only"><span>🎙 Voice call active</span></div></div>
       <div class="ai-chat-log" id="dc-chat-log"></div>
       <div class="dc-chat-actions"><button class="dc-clear-btn" onclick="clearLocalChat()" title="Clear chat only on this device">🗑 Clear Chat</button></div>
       <div class="ai-chat-inputrow"><button class="dc-attach-btn" onclick="document.getElementById('dc-file-input').click()" aria-label="Send a file" title="Send a file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg></button><input type="file" id="dc-file-input"><button class="dc-attach-btn voice-message-btn" id="dc-voice-btn" onclick="toggleVoiceMessage()" aria-label="Record voice message" title="Record voice message"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="3" width="10" height="12" rx="5"/><path d="M5 11a7 7 0 0014 0M12 18v3M8 21h8"/></svg></button><textarea id="dc-chat-input" placeholder="Type a message…" rows="1"></textarea><button class="ai-send-btn" onclick="sendChatMessage()" aria-label="Send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></button></div>
@@ -895,24 +882,6 @@ input[type=file]{display:none;}
   <!-- HOME -->
   <section class="screen active" id="screen-home">
     <div class="hero"><h1>QRDrop</h1><p>Scan. Share. Done.</p></div>
-    <div class="home-tools">
-      <button class="home-tool-btn primary" onclick="openAIChat()" aria-label="Chat with AI">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8"/></svg>
-        <span>Chat with AI</span>
-      </button>
-      <button class="home-tool-btn" onclick="openDeviceChat()" aria-label="Chat with Friends">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="8" height="13" rx="2"/><rect x="14" y="4" width="8" height="13" rx="2"/></svg>
-        <span>Chat with Friends</span>
-      </button>
-      <button class="home-tool-btn" onclick="openMeetingHome()" aria-label="Meeting">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><path d="M2 21v-2a5 5 0 015-5h4a5 5 0 015 5v2"/><circle cx="18" cy="8" r="2.5"/><path d="M22 21v-1.5a4 4 0 00-3-3.87"/></svg>
-        <span>Meeting</span>
-      </button>
-      <button class="home-tool-btn" onclick="showScreen('screen-tools')" aria-label="Convert and compress files">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 1l4 4-4 4M3 11V9a4 4 0 014-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 01-4 4H3"/></svg>
-        <span>Convert &amp; Compress</span>
-      </button>
-    </div>
     <div class="home-name-box">
       <label for="dc-home-self-name">Your name</label>
       <input class="home-name-input" id="dc-home-self-name" maxlength="24" autocomplete="nickname" placeholder="Enter your name">
@@ -927,17 +896,42 @@ input[type=file]{display:none;}
         <div class="icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM19 14h2v2h-2zM14 19h2v2h-2zM19 19h2v2h-2z"/></svg></div>
         <div>Receive<span class="sub">Scan a QR or enter a code</span></div>
       </button>
+      <button class="big-btn secondary" onclick="showScreen('screen-explore')">
+        <div class="icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M16.24 7.76l-2.12 6.36-6.36 2.12 2.12-6.36 6.36-2.12z"/></svg></div>
+        <div>Explore<span class="sub">AI chat, friend chat, meetings, and file tools</span></div>
+      </button>
     </div>
     <div class="status-pill pulsing" id="status-pill"><span class="status-dot" id="status-dot"></span><span id="status-text">Checking connection…</span></div>
-    <button class="cross-network-toggle" id="cross-network-toggle" onclick="toggleCrossNetworkMode()" aria-pressed="false">
-      <span class="cnt-switch" id="cnt-switch"></span>
-      <span class="cnt-label">
-        <span class="cnt-title">Different Wi-Fi networks</span>
-        <span class="cnt-sub" id="cnt-sub">Off — fastest, for devices on the same Wi-Fi</span>
-      </span>
-    </button>
     <div class="badge-row"><span class="mini-badge">Peer-to-peer</span><span class="mini-badge">Multiple receivers</span><span class="mini-badge">Multiple files</span></div>
     <div class="footer-note">Share one code, let as many people as you want scan or type it in — the file streams directly to each of them. Regenerate the code any time to shut the door on new receivers instantly.</div>
+  </section>
+
+  <!-- EXPLORE -->
+  <section class="screen" id="screen-explore">
+    <div class="panel">
+      <div class="panel-header">
+        <button class="back-btn" onclick="goHome()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M15 18l-6-6 6-6"/></svg></button>
+        <div><div class="panel-title">Explore</div><div class="panel-sub">Chat, meetings, and file tools</div></div>
+      </div>
+    </div>
+    <div class="home-actions">
+      <button class="big-btn primary" onclick="openAIChat()">
+        <div class="icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8"/></svg></div>
+        <div>Chat with AI<span class="sub">Ask questions, summarize files, get help</span></div>
+      </button>
+      <button class="big-btn secondary" onclick="openDeviceChat()">
+        <div class="icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="8" height="13" rx="2"/><rect x="14" y="4" width="8" height="13" rx="2"/></svg></div>
+        <div>Chat with Friends<span class="sub">Message, call, or video chat one-on-one</span></div>
+      </button>
+      <button class="big-btn secondary" onclick="openMeetingHome()">
+        <div class="icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><path d="M2 21v-2a5 5 0 015-5h4a5 5 0 015 5v2"/><circle cx="18" cy="8" r="2.5"/><path d="M22 21v-1.5a4 4 0 00-3-3.87"/></svg></div>
+        <div>Meeting<span class="sub">Video meetings for multiple devices</span></div>
+      </button>
+      <button class="big-btn secondary" onclick="showScreen('screen-tools')">
+        <div class="icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 1l4 4-4 4M3 11V9a4 4 0 014-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 01-4 4H3"/></svg></div>
+        <div>Convert &amp; Compress<span class="sub">Convert, compress, and clean up files</span></div>
+      </button>
+    </div>
   </section>
 
   <!-- SEND: PICK FILES -->
@@ -1077,7 +1071,11 @@ input[type=file]{display:none;}
    never the file. The file always streams directly device-to-device.
    ============================================================ */
 
-const CHUNK_SIZE = 64 * 1024;
+// Bumped from 64KB to 256KB (matching the chunk size already used elsewhere in this file for
+// chat-attached files) — fewer, larger data-channel messages means less per-message overhead,
+// which matters more, not less, once traffic is going through a relay on a different Wi-Fi/
+// cellular network, where every extra round trip costs more than on a local link.
+const CHUNK_SIZE = 256 * 1024;
 const HIGH_WATER = 4 * 1024 * 1024;
 const LOW_WATER  = 1 * 1024 * 1024;
 const CODE_DIGITS = 8;
@@ -1092,6 +1090,7 @@ let receiverRows = {};           // rowId -> {conn, completed}
 
 let recvPeer = null, recvConn = null;
 let recvFileList = null, recvCurIndex = -1, recvCurParts = [], recvCurReceived = 0;
+let recvFilelistWatchdog = null;
 let recvFilesDone = 0, recvStartTime = null;
 
 let activeScanStream = null, activeScanRAF = null;
@@ -1174,6 +1173,7 @@ function teardownSend(){
 function teardownReceive(){
   if(recvConn){ try{ recvConn.close(); }catch(e){} recvConn=null; }
   if(recvPeer){ try{ recvPeer.destroy(); }catch(e){} recvPeer=null; }
+  if(recvFilelistWatchdog){ clearTimeout(recvFilelistWatchdog); recvFilelistWatchdog=null; }
   recvFileList=null; recvCurIndex=-1; recvCurParts=[]; recvCurReceived=0; recvFilesDone=0;
 }
 
@@ -1200,7 +1200,11 @@ const ICE_CONFIG = {
     { urls: 'stun:stun1.l.google.com:19302' },
     { urls: 'stun:stun2.l.google.com:19302' },
     { urls: 'stun:stun.cloudflare.com:3478' },
-  ]
+  ],
+  // Pre-gathers a pool of ICE candidates before the offer/answer exchange even starts, so
+  // connecting to a device on a different Wi-Fi network (which almost always needs a relay
+  // candidate) doesn't have to wait for candidate gathering to begin from scratch.
+  iceCandidatePoolSize: 6,
 };
 // Adds a TURN relay on top of the STUN servers above. STUN alone can only help two devices
 // find each other's public address — it still needs a direct path between them, which many
@@ -1216,7 +1220,8 @@ const ICE_CONFIG_TURN = {
     { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
     { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
     { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' },
-  ]
+  ],
+  iceCandidatePoolSize: ICE_CONFIG.iceCandidatePoolSize,
   // NOTE: deliberately NOT setting iceTransportPolicy:'relay' here. openrelay.metered.ca is a
   // shared, rate-limited public demo TURN server — it's sometimes overloaded, blocked on some
   // networks, or briefly down. Forcing relay-only would make the connection depend entirely on
@@ -1225,30 +1230,40 @@ const ICE_CONFIG_TURN = {
   // *and* relay candidates together, and use whichever pair actually connects — a flaky TURN
   // server degrades this to "slower" instead of "doesn't work at all".
 };
-let crossNetworkMode = false;
 // FIX (mobile devices can't see/hear each other in meetings): phones are very often on cellular
 // data behind carrier-grade / symmetric NAT, which plain STUN frequently cannot punch through —
 // that's exactly why calls "connect" but no video/audio ever arrives, or the device never shows
-// up at all. TURN is now always included (not just when "cross-network" is toggled on) so mobile
-// devices get a working relay path automatically. This is safe: ICE still tries the faster direct
-// path first and only falls back to TURN relay when needed (see note above on iceTransportPolicy).
+// up at all. TURN is always included so every connection — same Wi-Fi, different Wi-Fi, or
+// cellular — gets a working relay path automatically, with no toggle or setup needed. ICE still
+// tries the faster direct path first and only falls back to TURN relay when needed.
 function currentIceConfig(){ return ICE_CONFIG_TURN; }
 // Surfaces the *actual* WebRTC ICE failure reason in the console — which candidate types were
 // gathered, whether a TURN allocation succeeded, and why the connection ultimately failed —
 // instead of leaving us guessing from a generic timeout message. PeerJS exposes the underlying
 // RTCPeerConnection as conn.peerConnection once the connection begins negotiating.
 function logIceDiagnostics(conn, label){
+  // Besides logging to the console, record what actually happened onto conn.__iceDiag so
+  // on-screen "couldn't connect" messages can report the real reason (no relay candidate ever
+  // gathered, TURN allocation rejected, etc.) instead of a generic timeout string.
+  conn.__iceDiag = { sawRelay: false, sawSrflx: false, sawHost: false, lastState: null, candidateErrors: 0 };
   const attach = ()=>{
     const pc = conn.peerConnection;
     if(!pc) return false;
     pc.addEventListener('icecandidate', e=>{
-      if(e.candidate) console.log(`[qrdrop:${label}] local candidate:`, e.candidate.type, e.candidate.protocol, e.candidate.address);
+      if(e.candidate){
+        console.log(`[qrdrop:${label}] local candidate:`, e.candidate.type, e.candidate.protocol, e.candidate.address);
+        if(e.candidate.type === 'relay') conn.__iceDiag.sawRelay = true;
+        else if(e.candidate.type === 'srflx') conn.__iceDiag.sawSrflx = true;
+        else if(e.candidate.type === 'host') conn.__iceDiag.sawHost = true;
+      }
     });
     pc.addEventListener('icecandidateerror', e=>{
       console.warn(`[qrdrop:${label}] ICE candidate error:`, e.errorCode, e.errorText, e.url);
+      conn.__iceDiag.candidateErrors++;
     });
     pc.addEventListener('iceconnectionstatechange', ()=>{
       console.log(`[qrdrop:${label}] iceConnectionState:`, pc.iceConnectionState);
+      conn.__iceDiag.lastState = pc.iceConnectionState;
     });
     pc.addEventListener('icegatheringstatechange', ()=>{
       console.log(`[qrdrop:${label}] iceGatheringState:`, pc.iceGatheringState);
@@ -1257,17 +1272,26 @@ function logIceDiagnostics(conn, label){
   };
   if(!attach()) setTimeout(attach, 200); // peerConnection may not exist on this tick yet
 }
-function toggleCrossNetworkMode(){
-  crossNetworkMode = !crossNetworkMode;
-  const btn = document.getElementById('cross-network-toggle');
-  const sub = document.getElementById('cnt-sub');
-  btn.setAttribute('aria-pressed', crossNetworkMode ? 'true' : 'false');
-  sub.textContent = crossNetworkMode
-    ? 'On — routes through a relay so separate Wi-Fi/cellular networks can connect (slower)'
-    : 'Off — fastest, for devices on the same Wi-Fi';
+// Turns the collected ICE diagnostics into a short, human-readable reason to append to a
+// "couldn't connect" message. Returns '' when there's nothing useful to add yet (e.g. the
+// peerConnection never got far enough to gather any candidates).
+function iceFailureReason(conn){
+  const d = conn && conn.__iceDiag;
+  if(!d) return '';
+  if(!d.sawHost && !d.sawSrflx && !d.sawRelay){
+    return ' Your device could not gather any network candidates — check your internet connection.';
+  }
+  if(!d.sawRelay){
+    return d.candidateErrors > 0
+      ? " The shared relay server couldn't be reached (it's a free public service and is sometimes down, overloaded, or blocked on one network) — try again in a minute, or try connecting from a mobile hotspot instead of Wi-Fi."
+      : " No relay connection could be established yet — the shared relay server may be slow or temporarily unavailable. Try again in a minute.";
+  }
+  return '';
 }
-const CONNECT_TIMEOUT_MS = 20000;
-const CONNECT_TIMEOUT_MS_RELAY = 35000; // TURN relay negotiation takes longer than a direct/STUN path
+// A relay negotiation (needed on many cross-network / cellular connections) routinely takes
+// longer than a direct same-Wi-Fi path, so every connection attempt gets this longer timeout —
+// same Wi-Fi or not — rather than risking cutting off a relay connection that was about to succeed.
+const CONNECT_TIMEOUT_MS = 35000;
 function fmtBytes(bytes){
   if(bytes < 1024) return bytes + ' B';
   const units = ['KB','MB','GB']; let u=-1,b=bytes;
@@ -1641,13 +1665,39 @@ function sendAllFilesTo(conn, rowId){
   markReceiverStatus(rowId, 'Sending file list…', null, 0);
 
   const meta = files.map(f=>({ name: f.name, mime: f.type || 'application/octet-stream', size: f.size }));
-  try{ conn.send({ type:'filelist', files: meta }); }catch(e){ markReceiverStatus(rowId,'Connection error','err',null); return; }
+  // BUGFIX (receiver connects but never receives anything, especially cross-network / over a TURN
+  // relay): this 'filelist' message is the very first thing sent on the data channel, right as it
+  // reports 'open'. Over a relay path the ICE/TURN permission for the peer's address can still be
+  // settling for a moment even after 'open' fires, so this first send can occasionally be lost.
+  // There was no retry and no receiver-side timeout, so a single dropped filelist message meant
+  // the receiver sat on "Connected — waiting for file info…" forever with no error and no way to
+  // recover short of restarting the whole transfer. Now we keep resending filelist every couple
+  // of seconds until the receiver acks it (see 'filelist-ack' handling below), and give up with a
+  // clear error after a handful of tries instead of hanging silently.
+  let filelistAcked = false;
+  let filelistAttempts = 0;
+  const sendFilelist = ()=>{
+    if(filelistAcked || !receiverRows[rowId]) return;
+    filelistAttempts++;
+    try{ conn.send({ type:'filelist', files: meta }); }
+    catch(e){ markReceiverStatus(rowId,'Connection error','err',null); return; }
+    if(filelistAttempts >= 6){
+      markReceiverStatus(rowId, "Receiver isn't responding", 'err', null);
+      return;
+    }
+    setTimeout(sendFilelist, 2500);
+  };
+  conn.on('data', data=>{
+    if(data && typeof data === 'object' && data.type === 'filelist-ack') filelistAcked = true;
+  });
+  sendFilelist();
 
   const totalBytes = files.reduce((s,f)=>s+f.size, 0);
   let fileIndex = 0, offset = 0, bytesSoFar = 0;
 
   function sendNext(){
     if(!receiverRows[rowId]) return; // row was removed / peer torn down
+    filelistAcked = true; // once real transfer data is flowing, stop worrying about the filelist ack
     if(fileIndex >= files.length){
       try{ conn.send({ type:'alldone' }); }catch(e){}
       markReceiverStatus(rowId, 'Waiting for confirmation…', null, 100);
@@ -1725,16 +1775,14 @@ function connectToCode(code){
   let settled = false;
   const peer = new Peer(undefined, { debug: 1, config: currentIceConfig() });
 
-  const wasCrossNetwork = crossNetworkMode; // capture now — matches the config this peer was actually created with
   const connectTimeout = setTimeout(()=>{
     if(settled) return;
     settled = true;
     try{ peer.destroy(); }catch(e){}
-    const msg = wasCrossNetwork
-      ? "The connection timed out even over the relay. Double-check \"Different Wi-Fi networks\" is also turned on on the other device, or check for a firewall/VPN blocking the connection."
-      : "The connection timed out. This usually means the two devices can't reach each other directly — try turning on \"Different Wi-Fi networks\" on both devices, or check for a firewall/VPN blocking peer-to-peer connections.";
+    const reason = iceFailureReason(recvConn);
+    const msg = "The connection timed out. Make sure the other device is still on this screen with a valid code, or check for a firewall/VPN blocking peer-to-peer connections." + reason;
     showError('receive', "Couldn't connect to that device", msg);
-  }, wasCrossNetwork ? CONNECT_TIMEOUT_MS_RELAY : CONNECT_TIMEOUT_MS);
+  }, CONNECT_TIMEOUT_MS);
 
   peer.on('open', ()=>{
     if(settled) return;
@@ -1763,6 +1811,15 @@ function wireRecvConnection(onConnected){
     connectedFired = true;
     if(onConnected) onConnected();
     setRecvState('Connected — waiting for file info…', true);
+    // BUGFIX (silent hang after connecting): see the matching note in sendAllFilesTo — if the
+    // sender's first message is lost, the sender now retries, but the receiver still had nothing
+    // to fall back on if the retries also never arrive (relay stopped passing traffic entirely).
+    // Surface a clear, actionable error instead of leaving "Connected — waiting for file info…"
+    // on screen forever.
+    recvFilelistWatchdog = setTimeout(()=>{
+      if(recvFileList) return; // filelist did arrive, nothing to do
+      showError('receive', "Connected, but no files arrived", "The connection opened but the sender's device list never came through. This can happen on a flaky relay connection — ask the sender to generate a new code and try again.");
+    }, 16000);
   };
   recvConn.on('open', handleConnected);
   if(recvConn.open) handleConnected();
@@ -1790,6 +1847,8 @@ function wireRecvConnection(onConnected){
     if(!data || typeof data !== 'object') return;
     if(data.type === 'filelist'){
       recvFileList = data.files;
+      if(recvFilelistWatchdog){ clearTimeout(recvFilelistWatchdog); recvFilelistWatchdog=null; }
+      try{ recvConn.send({ type:'filelist-ack' }); }catch(e){}
       document.getElementById('recv-overall-sub').textContent = '0 of ' + recvFileList.length + ' files';
       return;
     }
@@ -1822,11 +1881,13 @@ function wireRecvConnection(onConnected){
     }
   });
   recvConn.on('close', ()=>{
+    if(recvFilelistWatchdog){ clearTimeout(recvFilelistWatchdog); recvFilelistWatchdog=null; }
     if(document.getElementById('screen-receive').classList.contains('active')){
       showError('receive', 'Transfer interrupted', 'The connection dropped partway through. Ask the sender for the code again and try again.');
     }
   });
   recvConn.on('error', ()=>{
+    if(recvFilelistWatchdog){ clearTimeout(recvFilelistWatchdog); recvFilelistWatchdog=null; }
     if(document.getElementById('screen-receive').classList.contains('active')){
       showError('receive', 'Transfer interrupted', 'The connection dropped partway through. Ask the sender for the code again and try again.');
     }
@@ -1908,14 +1969,14 @@ function openAIProvider(url,name){const ok=confirm('Warning: opening '+name+' ma
 let dcOwnPeer=null,dcOwnCode='',dcConn=null,dcConns=new Map(),dcPeerNames=new Map(),dcSelectedPeer=null,dcRecvStates=new Map(),dcOutgoingId=0,dcOwnName=(localStorage.getItem('qrdrop_chat_name')||'').trim()||'My device',dcChatMode='private',dcGroupWarnShown=false;
 let dcMediaCalls=new Map(),dcLocalStream=null,dcPendingIncomingCalls=[],dcVoiceRecorder=null,dcVoiceChunks=[],dcMediaKind=null,dcMediaTrack=null,dcMicMuted=false,dcSpeakerMuted=false,dcAudioContext=null,dcScreenChoice='screen',dcShareAudio=true;
 setTimeout(()=>{const hi=document.getElementById('dc-home-self-name');if(hi)hi.value=dcOwnName},0);
-function updateDCModeSub(){const sub=document.getElementById('dc-mode-sub');if(sub)sub.textContent=(dcChatMode==='group'?'Group Chat':'Private Chat')+' · '+(crossNetworkMode?'Different Wi-Fi networks is on — you can connect across networks':'Same Wi-Fi only — turn on "Different Wi-Fi networks" on the home screen to chat across networks')}
+function updateDCModeSub(){const sub=document.getElementById('dc-mode-sub');if(sub)sub.textContent=(dcChatMode==='group'?'Group Chat':'Private Chat')+' · '+'Works across different Wi-Fi networks and cellular data'}
 function setChatMode(mode){dcChatMode=mode==='group'?'group':'private';if(dcChatMode==='group'&&dcConns.size===0)dcGroupWarnShown=false;document.getElementById('dc-private-mode-btn')?.classList.toggle('active',dcChatMode==='private');document.getElementById('dc-group-mode-btn')?.classList.toggle('active',dcChatMode==='group');const help=document.getElementById('dc-mode-help');if(help)help.textContent=dcChatMode==='group'?'Group chat lets connected devices discover one another and shows Invite inside the chat.':'Private chat keeps messages between the selected connected device and you. Invite is available on the screen behind Back.';updateDCModeSub();updateChatInviteVisibility();updateGroupNameLockUI()}
 function updateChatInviteVisibility(){const b=document.getElementById('dc-invite-more-btn');if(b)b.style.display=dcChatMode==='group'?'':'none'}
 function openDeviceChat(){const hi=document.getElementById('dc-home-self-name');if(hi)hi.value=dcOwnName;dcChatMode='private';showScreen('screen-device-chat-connect');setChatMode('private');document.getElementById('dc-peer-input').value='';document.getElementById('dc-connect-error').style.display='none';document.getElementById('dc-connect-state').style.display='none';if(!dcOwnPeer)startChatOwnPeer(0);renderPeerList()}
 function startChatOwnPeer(attempt){const code=genCode(),peer=new Peer(code+'-c',{debug:1,config:currentIceConfig()});let settled=false;peer.on('open',()=>{if(settled)return;settled=true;dcOwnPeer=peer;dcOwnCode=code;document.getElementById('dc-own-code').textContent=code;setOwnChatName(dcOwnName,false);renderPeerList()});peer.on('error',err=>{if(settled)return;if(err&&err.type==='unavailable-id'&&attempt<6){settled=true;try{peer.destroy()}catch(e){}startChatOwnPeer(attempt+1)}else{settled=true;document.getElementById('dc-own-code').textContent='Unavailable'}});peer.on('connection',conn=>{wirePeerConnection(conn,false)});peer.on('call',handleIncomingMediaCall)}
 function regenerateChatCode(){disconnectDeviceChat(false);document.getElementById('dc-own-code').textContent='— — — — —';startChatOwnPeer(0)}
 function copyChatCode(){if(dcOwnCode)copyText(dcOwnCode).then(()=>{flashButton(document.getElementById('dc-copy-btn'),'Copied!');const x=document.getElementById('dc-invite-copy');if(x)x.classList.add('active')})}
-function connectToChatCode(){const errEl=document.getElementById('dc-connect-error'),code=normalizeCodeInput(document.getElementById('dc-peer-input').value);if(!isValidCodeFormat(code)){errEl.textContent="That doesn't look like a valid code (8 digits + 1 letter).";errEl.style.display='block';return}if(!dcOwnPeer){errEl.textContent='Still setting up your connection — try again in a moment.';errEl.style.display='block';return}if(dcOwnCode===code){errEl.textContent='You cannot connect to your own code.';errEl.style.display='block';return}errEl.style.display='none';document.getElementById('dc-connect-state').style.display='flex';document.getElementById('dc-connect-state-text').textContent='Connecting…';const conn=dcOwnPeer.connect(code+'-c',{reliable:true,metadata:{code:dcOwnCode,name:dcOwnName,mode:dcChatMode}}),wasCrossNetwork=crossNetworkMode;let settled=false;const timeout=setTimeout(()=>{if(settled)return;settled=true;document.getElementById('dc-connect-state').style.display='none';errEl.textContent=wasCrossNetwork?"Couldn't reach that device even over the relay. Make sure they also have \"Different Wi-Fi networks\" turned on.":"Couldn't reach that device. If you're on different Wi-Fi networks, turn on \"Different Wi-Fi networks\" and try again.";errEl.style.display='block';try{conn.close()}catch(e){}},wasCrossNetwork?CONNECT_TIMEOUT_MS_RELAY:CONNECT_TIMEOUT_MS);conn.__targetCode=code;conn.__timer=timeout;conn.on('open',()=>{if(settled)return;settled=true;clearTimeout(timeout);document.getElementById('dc-connect-state').style.display='none';wirePeerConnection(conn,true)});conn.on('error',()=>{if(settled)return;settled=true;clearTimeout(timeout);document.getElementById('dc-connect-state').style.display='none';errEl.textContent="We couldn't find that code. Double check it with your friend.";errEl.style.display='block'})}
+function connectToChatCode(){const errEl=document.getElementById('dc-connect-error'),code=normalizeCodeInput(document.getElementById('dc-peer-input').value);if(!isValidCodeFormat(code)){errEl.textContent="That doesn't look like a valid code (8 digits + 1 letter).";errEl.style.display='block';return}if(!dcOwnPeer){errEl.textContent='Still setting up your connection — try again in a moment.';errEl.style.display='block';return}if(dcOwnCode===code){errEl.textContent='You cannot connect to your own code.';errEl.style.display='block';return}errEl.style.display='none';document.getElementById('dc-connect-state').style.display='flex';document.getElementById('dc-connect-state-text').textContent='Connecting…';const conn=dcOwnPeer.connect(code+'-c',{reliable:true,metadata:{code:dcOwnCode,name:dcOwnName,mode:dcChatMode}});let settled=false;const timeout=setTimeout(()=>{if(settled)return;settled=true;document.getElementById('dc-connect-state').style.display='none';const reason=iceFailureReason(conn);errEl.textContent="Couldn't reach that device. Double-check the code, make sure they're still on this screen, and check for a firewall/VPN blocking the connection."+reason;errEl.style.display='block';try{conn.close()}catch(e){}},CONNECT_TIMEOUT_MS);conn.__targetCode=code;conn.__timer=timeout;logIceDiagnostics(conn,'chat-connect');conn.on('open',()=>{if(settled)return;settled=true;clearTimeout(timeout);document.getElementById('dc-connect-state').style.display='none';wirePeerConnection(conn,true)});conn.on('error',()=>{if(settled)return;settled=true;clearTimeout(timeout);document.getElementById('dc-connect-state').style.display='none';errEl.textContent="We couldn't find that code. Double check it with your friend.";errEl.style.display='block'})}
 function wirePeerConnection(conn,isOutgoing){if(!conn)return;const key=conn.peer||('peer-'+Math.random());if(dcConns.has(key)){try{conn.close()}catch(e){}return}dcConns.set(key,conn);const targetCode=(conn.__targetCode||conn.metadata?.code||key.replace(/-c$/,''));dcPeerNames.set(key,conn.metadata?.name||('Device '+targetCode.slice(-2)));conn.on('data',data=>handleDCData(data,conn));conn.on('close',()=>removePeerConnection(key));conn.on('error',()=>appendDCSystemMsg('A device connection had an error.'));if(conn.open)onPeerReady(conn,key,isOutgoing);else conn.on('open',()=>onPeerReady(conn,key,isOutgoing))}
 function onPeerReady(conn,key,isOutgoing){const requestedMode=conn.metadata?.mode;if(requestedMode==='group'||requestedMode==='private')dcChatMode=requestedMode;if(dcChatMode==='private')dcSelectedPeer=key;const peerName=dcPeerNames.get(key)||'Friend';appendDCSystemMsg(peerName+' joined the '+(dcChatMode==='group'?'group':'private')+' chat.');showScreen('screen-device-chat-room');document.getElementById('dc-room-sub').textContent=(dcChatMode==='group'?'Group':'Private')+' · '+dcConns.size+' device'+(dcConns.size===1?'':'s')+' connected';const nameInput=document.getElementById('dc-self-name');if(nameInput)nameInput.value=dcOwnName;renderPeerList();updateCallTarget();updateChatInviteVisibility();updateGroupNameLockUI();try{conn.send({type:'chat-profile',name:dcOwnName,senderPeerId:dcOwnPeer?.id||'',seen:[dcOwnPeer?.id||'']})}catch(e){}
   // Group mode only: mesh discovery lets the group grow transitively.
@@ -1974,75 +2035,74 @@ async function getVideoStream(){const q=qualitySettings();return navigator.media
    MediaStream + every active peer connection's sender via replaceTrack — the same technique
    already used for camera-bypass and mic-gain elsewhere in this file, so it doesn't renegotiate
    or interrupt audio. ---- */
-async function flipCallCamera(context){
-  const desired = cameraFacingMode==='user' ? 'environment' : 'user';
-  const liveStream = context==='meeting' ? mtLocalStream : dcLocalStream;
-  const oldTrack = liveStream ? liveStream.getVideoTracks()[0] : null;
-  const oldTrackWasEnabled = oldTrack ? oldTrack.enabled : true;
-  // FIX (flip camera failing, especially in the meeting screen): most Android camera HALs can
-  // only have ONE camera session open at a time — front OR back, never both. The old code
-  // requested the new-facing stream *before* releasing the old one, so on real Android hardware
-  // the getUserMedia() call for the opposite camera would fail outright (or silently hand back
-  // the *same* camera) because the still-open old camera was holding the hardware. Stopping the
-  // current track first releases the camera so the new request can actually succeed.
-  if(oldTrack){ try{ liveStream.removeTrack(oldTrack); }catch(e){} oldTrack.stop(); }
+async function listVideoInputDevices(){
   try{
-    const newStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:desired},audio:false});
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    return devices.filter(d=>d.kind==='videoinput');
+  }catch(e){ return []; }
+}
+async function flipCallCamera(context){
+  const activeStream = context==='meeting' ? mtLocalStream : dcLocalStream;
+  const oldTrack = activeStream?.getVideoTracks?.()[0];
+  const desired = cameraFacingMode==='user' ? 'environment' : 'user';
+  // BUGFIX (flip camera doing nothing, especially on desktop/laptop): relying on facingMode
+  // alone only works on phones. A laptop/desktop webcam has no meaningful facingMode, so a
+  // facingMode-only request just re-grants the same single camera and the button appears
+  // completely dead. Cycling through the enumerated camera list by deviceId instead works
+  // uniformly on phones (front/back) and on desktops/laptops with more than one webcam, and
+  // we only fall back to the facingMode hint if device enumeration isn't available at all.
+  let videoConstraint = {facingMode:desired};
+  try{
+    const cams = await listVideoInputDevices();
+    if(cams.length>1){
+      const curId = oldTrack?.getSettings?.().deviceId;
+      let idx = cams.findIndex(d=>d.deviceId===curId);
+      idx = (idx+1) % cams.length;
+      videoConstraint = {deviceId:{exact:cams[idx].deviceId}};
+    } else if(cams.length===1){
+      if(typeof setCallStatus==='function') setCallStatus('Your device only has one camera to switch to.');
+      return;
+    }
+  }catch(e){ /* enumeration unsupported/blocked — fall back to the facingMode request below */ }
+  try{
+    const newStream = await navigator.mediaDevices.getUserMedia({video:videoConstraint,audio:false});
     const newTrack = newStream.getVideoTracks()[0];
-    if(!newTrack) throw new Error('No video track returned for the new camera.');
-    newTrack.enabled = oldTrackWasEnabled; // preserve mute/camera-off state across the flip
-    cameraFacingMode = desired;
+    if(!newTrack) return;
+    const newSettings = newTrack.getSettings?.() || {};
+    cameraFacingMode = newSettings.facingMode || desired;
     if(context==='meeting'){
       if(mtLocalStream){
+        const oldT = mtLocalStream.getVideoTracks()[0];
         mtLocalStream.addTrack(newTrack);
+        if(oldT){ mtLocalStream.removeTrack(oldT); oldT.stop(); }
         for(const call of mtCalls.values()){
           const sender = call?.peerConnection?.getSenders?.().find(s=>s.track&&s.track.kind==='video');
           if(sender) await sender.replaceTrack(newTrack);
         }
+        // BUGFIX (flip works but the preview keeps showing the old camera): some browsers
+        // (notably iOS Safari) don't repaint a <video> when a track is swapped in/out of a
+        // MediaStream it's already displaying — force a reassignment so the preview updates.
+        document.querySelectorAll('#mt-tile-local video, #mt-local-cam-bubble video').forEach(v=>{ v.srcObject=null; v.srcObject=mtLocalStream; v.play?.().catch(()=>{}); });
       }
     } else {
       if(dcLocalStream){
+        const oldT = dcLocalStream.getVideoTracks()[0];
         dcLocalStream.addTrack(newTrack);
+        if(oldT){ dcLocalStream.removeTrack(oldT); oldT.stop(); }
         dcMediaTrack = newTrack;
         for(const call of dcMediaCalls.values()){
           const sender = call?.peerConnection?.getSenders?.().find(s=>s.track&&s.track.kind==='video');
           if(sender) await sender.replaceTrack(newTrack);
         }
+        const lv=document.getElementById('dc-local-video');
+        if(lv){ lv.srcObject=null; lv.srcObject=dcLocalStream; lv.play?.().catch(()=>{}); }
       }
     }
   }catch(e){
-    // We already released the old camera above, so if the new one failed to open we'd
-    // otherwise be left with a dead/frozen video feed. Try to recover the camera we just had.
-    try{
-      const recoverStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:cameraFacingMode},audio:false});
-      const recoverTrack = recoverStream.getVideoTracks()[0];
-      if(recoverTrack){
-        recoverTrack.enabled = oldTrackWasEnabled;
-        if(context==='meeting'&&mtLocalStream){
-          mtLocalStream.addTrack(recoverTrack);
-          for(const call of mtCalls.values()){
-            const sender = call?.peerConnection?.getSenders?.().find(s=>s.track&&s.track.kind==='video');
-            if(sender) await sender.replaceTrack(recoverTrack);
-          }
-        } else if(dcLocalStream){
-          dcLocalStream.addTrack(recoverTrack);
-          dcMediaTrack = recoverTrack;
-          for(const call of dcMediaCalls.values()){
-            const sender = call?.peerConnection?.getSenders?.().find(s=>s.track&&s.track.kind==='video');
-            if(sender) await sender.replaceTrack(recoverTrack);
-          }
-        }
-      }
-    }catch(e2){ /* genuinely only one camera available — nothing more we can do */ }
     if(typeof setCallStatus==='function') setCallStatus("Could not switch camera — your device may only have one.");
-    const mtStatus=document.getElementById('mt-participant-count');
-    if(context==='meeting'&&mtStatus){ const prev=mtStatus.textContent; mtStatus.textContent='Could not switch camera — your device may only have one.'; setTimeout(()=>{ if(mtStatus.textContent==='Could not switch camera — your device may only have one.') mtStatus.textContent=prev; },2500); }
   }
 }
-async function getScreenStream(){
-  if(isNativeAndroid()) return nativeLiveScreenStream();
-  return navigator.mediaDevices.getDisplayMedia({video:true,audio:dcShareAudio});
-}
+async function getScreenStream(){return navigator.mediaDevices.getDisplayMedia({video:true,audio:dcShareAudio})}
 function prepareMediaUI(kind){const panel=document.getElementById('dc-media-panel'),remote=document.getElementById('dc-remote-video'),local=document.getElementById('dc-local-video'),audio=document.getElementById('dc-audio-only');panel.classList.add('active');remote.style.display=kind==='voice'?'none':'block';local.style.display=kind==='voice'?'none':'block';audio.classList.toggle('active',kind==='voice');document.getElementById('dc-media-label').textContent=kind==='screen'?'Screen share':kind==='video'?'Video call':'Voice call';document.getElementById('dc-end-call-btn').disabled=false;updateLocalMuteBadges()}
 function clearMediaUI(){stopCameraBypass();const __panel=document.getElementById('dc-media-panel');__panel.classList.remove('controls-hidden');dcControlsHidden=false;const __rv=document.getElementById('dc-remote-video');__rv.classList.remove('cam-size-1','cam-size-2','cam-size-3','dc-pip-face');document.getElementById('dc-media-panel').classList.remove('active','sharing');document.getElementById('dc-remote-video').srcObject=null;document.getElementById('dc-local-video').srcObject=null;const sv=document.getElementById('dc-screenshare-video');if(sv)sv.srcObject=null;document.getElementById('dc-audio-only').classList.remove('active');document.getElementById('dc-end-call-btn').disabled=true;dcMicMuted=false;dcCamMuted=false;updateLocalMuteBadges();updateRemoteMuteBadges(false,false);const mt=document.getElementById('dc-mic-toggle');if(mt){mt.classList.add('active');mt.classList.remove('muted');mt.textContent='🎙 Mic On'}const ct=document.getElementById('dc-cam-toggle');if(ct){ct.classList.add('active');ct.classList.remove('muted');ct.textContent='📷 Camera On'}const mmb=document.getElementById('dc-media-mic-btn');if(mmb){mmb.classList.remove('muted');mmb.textContent='🎙 Mic'}const mcb=document.getElementById('dc-media-cam-btn');if(mcb){mcb.classList.remove('muted');mcb.textContent='📷 Camera'}resetBubblePosition(document.getElementById('dc-local-video-wrap'));resetBubblePosition(document.getElementById('dc-remote-video'))}
 function getSelectedCallTargets(){return dcSelectedPeer?[dcSelectedPeer]:[...dcConns.keys()]}
@@ -2071,15 +2131,43 @@ let dcMicGainNode=null,dcMicGainSource=null,dcMicGainDestination=null,dcMicProce
 async function applyMicGain(){if(!dcLocalStream||!window.AudioContext)return;const track=dcLocalStream.getAudioTracks()[0];if(!track||track===dcMicProcessedTrack&&dcMicGainSource)return;try{if(dcMicGainSource)dcMicGainSource.disconnect();if(dcMicGainNode)dcMicGainNode.disconnect();if(dcMicGainDestination)dcMicGainDestination.disconnect();const Ctx=window.AudioContext||window.webkitAudioContext;const ctx=dcAudioContext||(dcAudioContext=new Ctx());dcMicGainSource=ctx.createMediaStreamSource(new MediaStream([track]));dcMicGainNode=ctx.createGain();dcMicGainDestination=ctx.createMediaStreamDestination();dcMicGainNode.gain.value=dcMicGainValue;dcMicGainSource.connect(dcMicGainNode).connect(dcMicGainDestination);const processed=dcMicGainDestination.stream.getAudioTracks()[0];if(processed&&dcLocalStream&&track!==processed){dcLocalStream.removeTrack(track);dcLocalStream.addTrack(processed)}for(const call of dcMediaCalls.values()){const sender=call?.peerConnection?.getSenders?.().find(x=>x.track?.kind==='audio');if(sender)await sender.replaceTrack(processed)}dcMicProcessedTrack=processed}catch(e){}}
 function setMicVolume(v){dcMicGainValue=Math.max(0,Number(v)/100);const n=document.getElementById('dc-mic-volume-value');if(n)n.value=Math.round(dcMicGainValue*100)+'%';if(n)n.textContent=Math.round(dcMicGainValue*100)+'%';if(dcMicGainNode)dcMicGainNode.gain.value=dcMicGainValue;else if(dcLocalStream)applyMicGain()}
 function getRemoteMediaElement(){return document.getElementById('dc-remote-video')}
-function setSpeakerVolume(v){dcSpeakerVolume=Math.max(0,Math.min(2,Number(v)/100));const n=document.getElementById('dc-speaker-volume-value');if(n)n.textContent=Math.round(dcSpeakerVolume*100)+'%';const remote=getRemoteMediaElement();if(remote){remote.volume=Math.min(1,dcSpeakerVolume);remote.muted=dcSpeakerMuted||dcSpeakerVolume===0}}
-function setShareAudioVolume(v){dcShareAudioVolume=Math.max(0,Math.min(2,Number(v)/100));const n=document.getElementById('dc-share-audio-volume-value');if(n)n.textContent=Math.round(dcShareAudioVolume*100)+'%';const sv=document.getElementById('dc-screenshare-video');if(sv){sv.volume=Math.min(1,dcShareAudioVolume);sv.muted=dcSpeakerMuted||dcShareAudioVolume===0}}
+/* ---- BUGFIX (volume sliders that go to 200% but stop having any effect past 100%):
+   HTMLMediaElement.volume is spec-capped at 1.0 — setting it higher is silently clamped by
+   the browser, so the top half of every "up to 200%" slider did nothing at all, even though
+   the label kept counting up. Routing the element through a Web Audio GainNode (the same
+   technique this file already uses for the mic-volume slider) lets the gain genuinely exceed
+   1.0, so these sliders now actually boost the volume the way their UI promises. ---- */
+let __outputAudioCtx=null;
+const __elementGainNodes=new WeakMap();
+function getOutputGainNode(el){
+  if(!el) return null;
+  if(__elementGainNodes.has(el)) return __elementGainNodes.get(el);
+  try{
+    const Ctx=window.AudioContext||window.webkitAudioContext;
+    const ctx=__outputAudioCtx||(__outputAudioCtx=new Ctx());
+    const source=ctx.createMediaElementSource(el);
+    const gain=ctx.createGain();
+    source.connect(gain).connect(ctx.destination);
+    el.volume=1; el.muted=false; // once routed through Web Audio, the element's own volume/muted no longer affect what's audible — gain.value is the only control from here on
+    __elementGainNodes.set(el,gain);
+    return gain;
+  }catch(e){ return null; }
+}
+function setElementVolume(el,volume,muted){
+  if(!el) return;
+  const gain=getOutputGainNode(el);
+  if(gain){ gain.gain.value = muted?0:volume; }
+  else { el.volume=Math.min(1,volume); el.muted=muted||volume===0; } // fallback if Web Audio routing couldn't be set up
+}
+function setSpeakerVolume(v){dcSpeakerVolume=Math.max(0,Math.min(2,Number(v)/100));const n=document.getElementById('dc-speaker-volume-value');if(n)n.textContent=Math.round(dcSpeakerVolume*100)+'%';setElementVolume(getRemoteMediaElement(),dcSpeakerVolume,dcSpeakerMuted);}
+function setShareAudioVolume(v){dcShareAudioVolume=Math.max(0,Math.min(2,Number(v)/100));const n=document.getElementById('dc-share-audio-volume-value');if(n)n.textContent=Math.round(dcShareAudioVolume*100)+'%';setElementVolume(document.getElementById('dc-screenshare-video'),dcShareAudioVolume,dcSpeakerMuted);}
 let dcCamMuted=false;
 function toggleMicMute(){dcMicMuted=!dcMicMuted;if(dcLocalStream){dcLocalStream.getAudioTracks().forEach(t=>t.enabled=!dcMicMuted)}const b=document.getElementById('dc-mic-toggle');if(b){b.classList.toggle('active',!dcMicMuted);b.classList.toggle('muted',dcMicMuted);b.textContent=dcMicMuted?'🎙 Mic Muted':'🎙 Mic On'}const mb=document.getElementById('dc-media-mic-btn');if(mb){mb.classList.toggle('muted',dcMicMuted);mb.textContent=dcMicMuted?'🎙🚫 Muted':'🎙 Mic'}updateLocalMuteBadges();broadcastMuteState()}
 function toggleCameraMute(){dcCamMuted=!dcCamMuted;if(dcLocalStream){dcLocalStream.getVideoTracks().forEach(t=>t.enabled=!dcCamMuted)}const b=document.getElementById('dc-cam-toggle');if(b){b.classList.toggle('active',!dcCamMuted);b.classList.toggle('muted',dcCamMuted);b.textContent=dcCamMuted?'📷 Camera Off':'📷 Camera On'}const mb=document.getElementById('dc-media-cam-btn');if(mb){mb.classList.toggle('muted',dcCamMuted);mb.textContent=dcCamMuted?'📷🚫 Off':'📷 Camera'}updateLocalMuteBadges();broadcastMuteState()}
 function updateLocalMuteBadges(){const mic=document.getElementById('dc-local-mic-badge'),cam=document.getElementById('dc-local-cam-badge');if(mic)mic.classList.toggle('show',dcMicMuted);if(cam)cam.classList.toggle('show',dcCamMuted&&dcMediaKind!=='voice')}
 function updateRemoteMuteBadges(micMuted,camMuted){const mic=document.getElementById('dc-remote-mic-badge'),cam=document.getElementById('dc-remote-cam-badge');if(mic)mic.classList.toggle('show',!!micMuted);if(cam)cam.classList.toggle('show',!!camMuted)}
 function broadcastMuteState(){for(const [,c] of dcConns){if(c.open)try{c.send({type:'call-mute-state',mic:dcMicMuted,cam:dcCamMuted})}catch(e){}}}
-async function toggleSpeakerMute(){dcSpeakerMuted=!dcSpeakerMuted;const remote=getRemoteMediaElement();if(remote){remote.muted=dcSpeakerMuted||dcSpeakerVolume===0;remote.volume=Math.min(1,dcSpeakerVolume)}const sv=document.getElementById('dc-screenshare-video');if(sv){sv.muted=dcSpeakerMuted||dcShareAudioVolume===0}const b=document.getElementById('dc-speaker-toggle');if(b){b.classList.toggle('active',!dcSpeakerMuted);b.classList.toggle('muted',dcSpeakerMuted);b.textContent=dcSpeakerMuted?'🔇 Speaker Muted':'🔊 Speaker On'}const mb=document.getElementById('dc-media-speaker-btn');if(mb){mb.classList.toggle('muted',dcSpeakerMuted);mb.textContent=dcSpeakerMuted?'🔇 Muted':'🔊 Listen'}}
+async function toggleSpeakerMute(){dcSpeakerMuted=!dcSpeakerMuted;setElementVolume(getRemoteMediaElement(),dcSpeakerVolume,dcSpeakerMuted);setElementVolume(document.getElementById('dc-screenshare-video'),dcShareAudioVolume,dcSpeakerMuted);const b=document.getElementById('dc-speaker-toggle');if(b){b.classList.toggle('active',!dcSpeakerMuted);b.classList.toggle('muted',dcSpeakerMuted);b.textContent=dcSpeakerMuted?'🔇 Speaker Muted':'🔊 Speaker On'}const mb=document.getElementById('dc-media-speaker-btn');if(mb){mb.classList.toggle('muted',dcSpeakerMuted);mb.textContent=dcSpeakerMuted?'🔇 Muted':'🔊 Listen'}}
 function currentFullscreenEl(){return document.fullscreenElement||document.webkitFullscreenElement||document.msFullscreenElement||null}
 function toggleReceiverFullscreen(){
   const panel=document.getElementById('dc-media-panel'),video=getRemoteMediaElement();
@@ -2180,7 +2268,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 async function populateAudioDevices(){}
 async function changeAudioDevice(){}
 async function changeMediaQuality(){const track=dcMediaTrack;if(!track)return;const q=qualitySettings();try{if(track.kind==='video')await track.applyConstraints({width:{ideal:q.width},height:{ideal:q.height},frameRate:{ideal:q.frameRate,max:q.frameRate}});setCallStatus('Quality: '+document.getElementById('dc-quality').selectedOptions[0].text+' (browser/hardware may choose a lower mode).')}catch(e){setCallStatus('Exact quality is not supported; using the closest available setting.')}}
-async function startScreenShareDuringCall(){if(!isNativeAndroid()&&!navigator.mediaDevices?.getDisplayMedia){setCallStatus('Screen sharing is not supported here.');return}try{const screenStream=isNativeAndroid()?await nativeLiveScreenStream():await navigator.mediaDevices.getDisplayMedia({video:true,audio:dcShareAudio});const screenTrack=screenStream.getVideoTracks()[0];if(!screenTrack)return;screenTrack.addEventListener('ended',()=>stopScreenShareDuringCall(),{once:true});window.dcActiveScreenStream=screenStream;const targets=getSelectedCallTargets().filter(k=>dcConns.get(k)?.open);if(!targets.length){setCallStatus('Connect to a friend first.');screenStream.getTracks().forEach(t=>t.stop());return}for(const key of targets){const peerId=dcConns.get(key)?.peer;if(!peerId)continue;const call=dcOwnPeer.call(peerId,screenStream,{metadata:{kind:'screen',shareAudio:dcShareAudio}});const skey='screen-'+key;dcMediaCalls.set(skey,call);wireScreenShareCall(call,skey)}document.getElementById('dc-screen-btn').textContent='▣ Sharing Screen';document.getElementById('dc-media-panel').classList.add('active','sharing');resetBubblePosition(document.getElementById('dc-remote-video'));resetBubblePosition(document.getElementById('dc-local-video-wrap'));setCallStatus('Screen sharing started — your camera and voice stay on for your friend.')}catch(e){setCallStatus('Screen sharing was cancelled or is not available.')}}
+async function startScreenShareDuringCall(){if(!navigator.mediaDevices?.getDisplayMedia){setCallStatus('Screen sharing is not supported here.');return}try{const screenStream=await navigator.mediaDevices.getDisplayMedia({video:true,audio:dcShareAudio});const screenTrack=screenStream.getVideoTracks()[0];if(!screenTrack)return;screenTrack.addEventListener('ended',()=>stopScreenShareDuringCall(),{once:true});window.dcActiveScreenStream=screenStream;const targets=getSelectedCallTargets().filter(k=>dcConns.get(k)?.open);if(!targets.length){setCallStatus('Connect to a friend first.');screenStream.getTracks().forEach(t=>t.stop());return}for(const key of targets){const peerId=dcConns.get(key)?.peer;if(!peerId)continue;const call=dcOwnPeer.call(peerId,screenStream,{metadata:{kind:'screen',shareAudio:dcShareAudio}});const skey='screen-'+key;dcMediaCalls.set(skey,call);wireScreenShareCall(call,skey)}document.getElementById('dc-screen-btn').textContent='▣ Sharing Screen';document.getElementById('dc-media-panel').classList.add('active','sharing');resetBubblePosition(document.getElementById('dc-remote-video'));resetBubblePosition(document.getElementById('dc-local-video-wrap'));setCallStatus('Screen sharing started — your camera and voice stay on for your friend.')}catch(e){setCallStatus('Screen sharing was cancelled or is not available.')}}
 async function stopScreenShareDuringCall(){const st=window.dcActiveScreenStream;if(st){st.getTracks().forEach(t=>t.stop());window.dcActiveScreenStream=null}for(const [key,call] of [...dcMediaCalls])if(String(key).startsWith('screen-')){try{call.close()}catch(e){}dcMediaCalls.delete(key)}const sv=document.getElementById('dc-screenshare-video');if(sv)sv.srcObject=null;document.getElementById('dc-media-panel').classList.remove('sharing');resetBubblePosition(document.getElementById('dc-remote-video'));resetBubblePosition(document.getElementById('dc-local-video-wrap'));const b=document.getElementById('dc-screen-btn');if(b)b.textContent='▣ Share Screen';setCallStatus('Screen sharing stopped — camera and voice call continue.')}
 function hideDeviceChatRoom(){if(dcConns.size){showScreen('screen-device-chat-connect');updateDCModeSub();setChatMode(dcChatMode);document.getElementById('dc-invite-copy')?.classList.add('active');renderPeerList()}else{showScreen('screen-home')}}
 function disconnectDeviceChat(returnHome=true){endMediaCall(true);rejectIncomingCall();for(const [k,c] of dcConns){try{c.send({type:'chat-disconnect',from:dcOwnCode})}catch(e){}try{c.close()}catch(e){}}dcConns.clear();dcPeerNames.clear();dcRecvStates.clear();dcSelectedPeer=null;if(dcOwnPeer){try{dcOwnPeer.destroy()}catch(e){}dcOwnPeer=null}dcOwnCode='';dcChatMode='private';dcGroupWarnShown=false;updateGroupNameLockUI();renderPeerList();if(returnHome){document.getElementById('dc-own-code').textContent='— — — — —';showScreen('screen-home')}}
@@ -2968,16 +3056,190 @@ async function runZipAction(){
   }
   goBtn.disabled=false;
 }
+/* ---- BUGFIX (large zips, e.g. 10GB, fail to unzip): the previous code always called
+   JSZip.loadAsync(zipFiles[0]) first, even on the "streaming" path below it. JSZip's loadAsync
+   has to read the ENTIRE archive into a single in-memory ArrayBuffer to parse it — for a 10GB
+   file that alone is enough to exhaust a tab's memory (or exceed engine ArrayBuffer limits) and
+   fail before a single byte is ever extracted. The per-file streaming further down was real,
+   but it was already too late.
+   The functions below parse just the zip's End-Of-Central-Directory record and central
+   directory listing (a tiny amount of data even for a huge archive — usually well under a
+   few MB), including the Zip64 variants used by archives over 4GB, then extract each entry by
+   reading only that entry's own byte range out of the file (Blob.slice is free — it doesn't
+   copy anything into memory) and inflating it on the fly with the browser's native
+   DecompressionStream. Nothing this app can control ever holds more than one chunk of one
+   file in memory at a time, so archive size is no longer the limiting factor — free disk
+   space is. ---- */
+async function readBlobRange(blob,start,end){
+  return new Uint8Array(await blob.slice(start,end).arrayBuffer());
+}
+function readUint64LE(dv,offset){
+  const lo=dv.getUint32(offset,true), hi=dv.getUint32(offset+4,true);
+  return hi*4294967296+lo; // exact for anything under ~8 petabytes — plenty for a zip file
+}
+async function findZipEOCD(file){
+  const maxCommentLen=65535;
+  const searchLen=Math.min(file.size,22+maxCommentLen);
+  const tailStart=file.size-searchLen;
+  const tail=await readBlobRange(file,tailStart,file.size);
+  for(let i=tail.length-22;i>=0;i--){
+    if(tail[i]===0x50&&tail[i+1]===0x4b&&tail[i+2]===0x05&&tail[i+3]===0x06){
+      const dv=new DataView(tail.buffer,tail.byteOffset+i,22);
+      return{
+        cdSize:dv.getUint32(12,true),
+        cdOffset:dv.getUint32(16,true),
+        totalEntries:dv.getUint16(10,true),
+        eocdOffsetInFile:tailStart+i,
+      };
+    }
+  }
+  throw new Error("Not a valid zip file (couldn't find its end-of-central-directory record)");
+}
+async function findZip64EOCD(file,eocdOffsetInFile){
+  const locStart=eocdOffsetInFile-20;
+  if(locStart<0)return null;
+  const loc=await readBlobRange(file,locStart,locStart+20);
+  const dv=new DataView(loc.buffer,loc.byteOffset,20);
+  if(dv.getUint32(0,true)!==0x07064b50)return null;
+  const zip64EocdOffset=readUint64LE(dv,8);
+  const rec=await readBlobRange(file,zip64EocdOffset,zip64EocdOffset+56);
+  const dv2=new DataView(rec.buffer,rec.byteOffset,56);
+  if(dv2.getUint32(0,true)!==0x06064b50)throw new Error('Invalid Zip64 end-of-central-directory record');
+  return{ totalEntries:readUint64LE(dv2,32), cdSize:readUint64LE(dv2,40), cdOffset:readUint64LE(dv2,48) };
+}
+async function readZipCentralDirectory(file){
+  const eocd=await findZipEOCD(file);
+  let{cdSize,cdOffset,totalEntries}=eocd;
+  if(cdOffset===0xFFFFFFFF||cdSize===0xFFFFFFFF||totalEntries===0xFFFF){
+    const z64=await findZip64EOCD(file,eocd.eocdOffsetInFile);
+    if(z64){ cdSize=z64.cdSize; cdOffset=z64.cdOffset; totalEntries=z64.totalEntries; }
+  }
+  const cdBytes=await readBlobRange(file,cdOffset,cdOffset+cdSize);
+  const dv=new DataView(cdBytes.buffer,cdBytes.byteOffset,cdBytes.byteLength);
+  const dec=new TextDecoder('utf-8');
+  const entries=[];
+  let p=0;
+  for(let i=0;i<totalEntries;i++){
+    if(p+46>cdBytes.byteLength||dv.getUint32(p,true)!==0x02014b50)break; // stop cleanly if the count looks off rather than reading garbage
+    const method=dv.getUint16(p+10,true);
+    let compSize=dv.getUint32(p+20,true);
+    let uncompSize=dv.getUint32(p+24,true);
+    const nameLen=dv.getUint16(p+28,true);
+    const extraLen=dv.getUint16(p+30,true);
+    const commentLen=dv.getUint16(p+32,true);
+    let localOffset=dv.getUint32(p+42,true);
+    const nameStart=p+46;
+    const name=dec.decode(cdBytes.subarray(nameStart,nameStart+nameLen));
+    const extraStart=nameStart+nameLen, extraEnd=extraStart+extraLen;
+    let ep=extraStart;
+    while(ep+4<=extraEnd){
+      const tag=dv.getUint16(ep,true), tlen=dv.getUint16(ep+2,true);
+      if(tag===0x0001){ // Zip64 extended info — only the fields that were originally 0xFFFFFFFF are present, in this order
+        let zp=ep+4;
+        if(uncompSize===0xFFFFFFFF&&zp+8<=extraEnd){ uncompSize=readUint64LE(dv,zp); zp+=8; }
+        if(compSize===0xFFFFFFFF&&zp+8<=extraEnd){ compSize=readUint64LE(dv,zp); zp+=8; }
+        if(localOffset===0xFFFFFFFF&&zp+8<=extraEnd){ localOffset=readUint64LE(dv,zp); zp+=8; }
+      }
+      ep+=4+tlen;
+    }
+    entries.push({name,method,compressedSize:compSize,uncompressedSize:uncompSize,localHeaderOffset:localOffset,isDir:name.endsWith('/')});
+    p=nameStart+nameLen+extraLen+commentLen;
+  }
+  return entries;
+}
+async function extractZipEntryStream(file,entry){
+  const head=await readBlobRange(file,entry.localHeaderOffset,entry.localHeaderOffset+30);
+  const dv=new DataView(head.buffer,head.byteOffset,30);
+  if(dv.getUint32(0,true)!==0x04034b50)throw new Error('Corrupt zip entry: '+entry.name);
+  const nameLen=dv.getUint16(26,true), extraLen=dv.getUint16(28,true);
+  const dataStart=entry.localHeaderOffset+30+nameLen+extraLen;
+  const dataBlob=file.slice(dataStart,dataStart+entry.compressedSize);
+  if(entry.method===0)return dataBlob.stream(); // stored, no compression
+  if(entry.method===8){
+    if(typeof DecompressionStream==='undefined')throw new Error("This browser can't inflate zip entries — try a recent Chrome, Edge, Firefox, or Safari.");
+    return dataBlob.stream().pipeThrough(new DecompressionStream('deflate-raw'));
+  }
+  throw new Error('Unsupported compression method in "'+entry.name+'" — only Store and Deflate are supported.');
+}
+const ZIP_LEGACY_FALLBACK_LIMIT=1.5*1024*1024*1024; // above this, don't even try the whole-file-in-memory fallback
 async function runUnzip(status,list){
   status.textContent='Reading zip index…';
-  // Pass the File directly (Blob) instead of pre-loading it fully with FileReader —
-  // JSZip then only pulls bytes off disk as it needs them.
+  let entries;
+  try{
+    entries=(await readZipCentralDirectory(zipFiles[0])).filter(e=>!e.isDir&&e.name);
+  }catch(parseErr){
+    if(zipFiles[0].size>ZIP_LEGACY_FALLBACK_LIMIT){
+      status.textContent="Couldn't read this zip's index ("+(parseErr&&parseErr.message?parseErr.message:'unknown error')+') and the file is too large to fall back to loading it all into memory.';
+      return;
+    }
+    return runUnzipLegacy(status,list);
+  }
+  if(!entries.length){status.textContent='No files found inside that zip.';return}
+  if(typeof DecompressionStream==='undefined'&&entries.some(e=>e.method===8)){
+    if(zipFiles[0].size>ZIP_LEGACY_FALLBACK_LIMIT){
+      status.textContent="This browser can't extract compressed zip entries this large — try a recent Chrome, Edge, Firefox, or Safari.";
+      return;
+    }
+    return runUnzipLegacy(status,list);
+  }
+  if(window.showDirectoryPicker){
+    // Stream every entry straight to a chosen folder on disk, one at a time — memory use stays
+    // flat (one chunk of one file at a time) no matter how large the archive is.
+    let dirHandle;
+    try{ dirHandle=await window.showDirectoryPicker({mode:'readwrite'}); }
+    catch(e){ if(e.name==='AbortError'){status.textContent='';return} throw e; }
+    status.textContent='Extracting 0 / '+entries.length+' file(s)…';
+    let done=0;
+    for(const entry of entries){
+      const parts=entry.name.split('/').filter(Boolean);
+      const fname=parts.pop();
+      let dir=dirHandle;
+      for(const p of parts)dir=await dir.getDirectoryHandle(p,{create:true});
+      const fileHandle=await dir.getFileHandle(fname,{create:true});
+      const writable=await fileHandle.createWritable();
+      const stream=await extractZipEntryStream(zipFiles[0],entry);
+      const reader=stream.getReader();
+      while(true){
+        const{done:rdone,value}=await reader.read();
+        if(rdone)break;
+        await writable.write(value);
+      }
+      await writable.close();
+      done++; status.textContent='Extracting '+done+' / '+entries.length+' file(s)…';
+      const item=document.createElement('div');
+      item.className='tools-result-item';
+      item.innerHTML='<span>📄</span><span class="name">'+escapeHtml(entry.name)+'</span><span>Saved</span>';
+      list.appendChild(item);
+    }
+    status.textContent='Done — extracted '+entries.length+' file(s) straight to the folder you picked.';
+  }else{
+    // Fallback for browsers without the File System Access API: per-file download links, still
+    // built one file at a time via the streaming extractor above rather than loading everything
+    // at once.
+    status.textContent=entries.length+' file(s) found:';
+    for(const entry of entries){
+      const stream=await extractZipEntryStream(zipFiles[0],entry);
+      const blob=await new Response(stream).blob();
+      const url=URL.createObjectURL(blob);
+      const item=document.createElement('div');
+      item.className='tools-result-item';
+      item.innerHTML='<span>📄</span><span class="name">'+escapeHtml(entry.name)+'</span><span>'+fmtBytesBig(blob.size)+'</span>';
+      const dl=document.createElement('button');
+      dl.textContent='Download';
+      dl.onclick=()=>{const a=document.createElement('a');a.href=url;a.download=entry.name.split('/').pop();document.body.appendChild(a);a.click();document.body.removeChild(a)};
+      item.appendChild(dl);
+      list.appendChild(item);
+    }
+  }
+}
+/* Old whole-archive-in-memory path — kept only as a fallback for zips our lightweight parser
+   can't make sense of (unusual/corrupt files) or browsers without DecompressionStream, and
+   only ever used below ZIP_LEGACY_FALLBACK_LIMIT where holding it all in RAM is reasonable. */
+async function runUnzipLegacy(status,list){
   const zip=await JSZip.loadAsync(zipFiles[0]);
   const names=Object.keys(zip.files).filter(n=>!zip.files[n].dir);
   if(!names.length){status.textContent='No files found inside that zip.';return}
   if(window.showDirectoryPicker){
-    // Stream every entry straight to a chosen folder on disk, one at a time, so memory use
-    // stays flat no matter how large the archive or its individual files are.
     let dirHandle;
     try{ dirHandle=await window.showDirectoryPicker({mode:'readwrite'}); }
     catch(e){ if(e.name==='AbortError'){status.textContent='';return} throw e; }
@@ -3006,8 +3268,6 @@ async function runUnzip(status,list){
     }
     status.textContent='Done — extracted '+names.length+' file(s) straight to the folder you picked.';
   }else{
-    // Fallback for browsers without the File System Access API: per-file download links,
-    // same as before (fine up to the device's available RAM).
     status.textContent=names.length+' file(s) found:';
     for(const name of names){
       const blob=await zip.files[name].async('blob');
@@ -3876,7 +4136,6 @@ async function canvasEnhanceVideo(it,settings,statusEl){
     <div class="ai-settings-actions"><button onclick="closeAISettings()">Cancel</button><button class="save" onclick="saveAISettings()">Save</button></div>
   </div>
 </div>
-
 <script>
 /* ================= MEETINGS ================= */
 let mtOwnPeer=null,mtHostCode='',mtConns=new Map(),mtPeerNames=new Map(),mtCalls=new Map(),mtLocalStream=null;
@@ -4078,14 +4337,16 @@ async function actualJoinMeeting(code){
     peer.on('connection',conn=>meetingWireConnection(conn,false));
     peer.on('call',handleIncomingMeetingCall);
     const conn=peer.connect(code+'-m',{reliable:true,metadata:{name:dcOwnName}});
+    logIceDiagnostics(conn,'meeting-join');
     const timeout=setTimeout(()=>{
       if(settled)return;settled=true;
       document.getElementById('mt-connect-state').style.display='none';
-      errEl.textContent="Couldn't reach that meeting. Double-check the code with your host.";
+      const reason=iceFailureReason(conn);
+      errEl.textContent="Couldn't reach that meeting. Double-check the code with your host."+reason;
       errEl.style.display='block';
       try{conn.close()}catch(e){}
       try{peer.destroy()}catch(e){}
-    },crossNetworkMode?CONNECT_TIMEOUT_MS_RELAY:CONNECT_TIMEOUT_MS);
+    },CONNECT_TIMEOUT_MS);
     conn.on('data',data=>{
       if(settled)return;
       if(data&&data.type==='mt-join-locked'){
@@ -4559,13 +4820,7 @@ async function toggleMeetingScreenShare(){
     // tab/window/system audio (support depends on the browser + what the user picks in the share
     // dialog); echoCancellation:false keeps it from being processed like a microphone, which can
     // mangle music/video audio.
-    // On native Android, getDisplayMedia doesn't exist — fall back to the native MediaProjection
-    // frame-relay stream instead (see nativeLiveScreenStream()). It has no audio track (Android's
-    // MediaProjection audio-playback capture is a separate, newer API this doesn't wire up), so
-    // screen-share audio simply isn't available yet on the native app; video works normally.
-    const stream=isNativeAndroid()
-      ? await nativeLiveScreenStream()
-      : await navigator.mediaDevices.getDisplayMedia({video:{height:{ideal:parseInt(document.getElementById('mt-screen-quality-select').value,10)||720}},audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+    const stream=await navigator.mediaDevices.getDisplayMedia({video:{height:{ideal:parseInt(document.getElementById('mt-screen-quality-select').value,10)||720}},audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
     mtScreenStream=stream; mtSharingScreen=true;
     const track=stream.getVideoTracks()[0];
     if(track) track.addEventListener('ended',()=>stopMeetingScreenShare());
@@ -4644,7 +4899,7 @@ let mtShareAudioVolume=1;
 function setMtScreenAudioVolume(v){
   mtShareAudioVolume=Math.max(0,Math.min(2,Number(v)/100));
   const n=document.getElementById('mt-screen-audio-volume-value'); if(n)n.textContent=Math.round(mtShareAudioVolume*100)+'%';
-  const sv=document.getElementById('mt-screen-video'); if(sv){ sv.volume=Math.min(1,mtShareAudioVolume); sv.muted=mtShareAudioVolume===0; }
+  setElementVolume(document.getElementById('mt-screen-video'), mtShareAudioVolume, mtShareAudioVolume===0);
 }
 let mtMicGainNode=null,mtMicGainSource=null,mtMicGainDestination=null,mtMicProcessedTrack=null,mtMicGainValue=1,mtAudioContext=null;
 async function applyMtMicGain(){
@@ -4677,7 +4932,7 @@ let mtParticipantsVolume=1;
 function setMtParticipantsVolume(v){
   mtParticipantsVolume=Math.max(0,Math.min(2,Number(v)/100));
   const n=document.getElementById('mt-participants-volume-value'); if(n)n.textContent=Math.round(mtParticipantsVolume*100)+'%';
-  document.querySelectorAll('#mt-grid .mt-tile video').forEach(v=>{ if(!v.muted){ v.volume=Math.min(1,mtParticipantsVolume); } });
+  document.querySelectorAll('#mt-grid .mt-tile video').forEach(vid=>{ if(vid!==document.querySelector('#mt-tile-local video')){ setElementVolume(vid, mtParticipantsVolume, false); } });
 }
 
 /* ---- meeting: full screen for the shared screen, with a mobile rotate-to-fill + a visible exit (✕) button ---- */
@@ -4827,24 +5082,46 @@ async function openCamCapture(){
   document.getElementById('cam-result').style.display='none';
   await restartCamPreview();
 }
-async function restartCamPreview(){
+async function restartCamPreview(forceVideoConstraint){
   if(camStream){ camStream.getTracks().forEach(t=>t.stop()); camStream=null; }
   const q=camQualityConstraint();
+  const baseVideo = forceVideoConstraint || {facingMode:cameraFacingMode};
   try{
-    camStream=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:q.width},height:{ideal:q.height},facingMode:cameraFacingMode},audio:true});
+    camStream=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:q.width},height:{ideal:q.height},...baseVideo},audio:true});
   }catch(e){
-    try{ camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:cameraFacingMode},audio:true}); }
+    try{ camStream=await navigator.mediaDevices.getUserMedia({video:baseVideo,audio:true}); }
     catch(e2){
       try{ camStream=await navigator.mediaDevices.getUserMedia({video:true,audio:true}); }
       catch(e3){ alert('Could not access the camera — permission may have been denied.'); return; }
     }
   }
+  const track=camStream.getVideoTracks()[0];
+  if(track){ const s=track.getSettings?.()||{}; if(s.facingMode) cameraFacingMode=s.facingMode; }
   const v=document.getElementById('cam-capture-video'); v.srcObject=camStream; v.play?.().catch(()=>{});
 }
 /* Switch the Camera-capture-modal's preview between front and rear. Kept as its own
    function (rather than reusing flipCallCamera) because this modal has no active
-   RTCPeerConnection to replaceTrack() on — it just needs to restart the local preview. */
-function flipCamCapture(){
+   RTCPeerConnection to replaceTrack() on — it just needs to restart the local preview.
+   BUGFIX (flip does nothing on desktop/laptop): a plain facingMode toggle only means
+   anything on phones. Desktop/laptop webcams don't report a facingMode, so toggling it
+   just re-opens the same single camera. Cycle through the enumerated camera list by
+   deviceId instead — that works on phones and on desktops/laptops with more than one
+   webcam, falling back to the facingMode hint only when enumeration isn't available. */
+async function flipCamCapture(){
+  const curTrack=camStream?.getVideoTracks?.()[0];
+  try{
+    const cams=await listVideoInputDevices();
+    if(cams.length>1){
+      const curId=curTrack?.getSettings?.().deviceId;
+      let idx=cams.findIndex(d=>d.deviceId===curId);
+      idx=(idx+1)%cams.length;
+      await restartCamPreview({deviceId:{exact:cams[idx].deviceId}});
+      return;
+    } else if(cams.length===1){
+      alert('Your device only has one camera to switch to.');
+      return;
+    }
+  }catch(e){ /* enumeration unsupported — fall back below */ }
   cameraFacingMode = cameraFacingMode==='user' ? 'environment' : 'user';
   restartCamPreview();
 }
@@ -4997,13 +5274,18 @@ function gateFloatingCaptureUI(){
     btn.style.display='none';
     if(note&&note.classList.contains('cam-note'))note.style.display='none';
   }
-  // Live "Share Screen" during a call now works on native Android too, via the MediaProjection
-  // frame-relay in ScreenCapture.startLiveStream() + canvas.captureStream() (see
-  // nativeLiveScreenStream()) — it just runs at a lower, throttled frame rate than desktop's
-  // getDisplayMedia() and currently has no audio track, so leave a note rather than disabling it.
+  // Live "Share Screen" during a call needs a continuously-updating video stream fed straight
+  // into the WebRTC connection — that's fundamentally different from a single screenshot or a
+  // file recording, and isn't something the native ScreenCapture plugin (or any lightweight
+  // native plugin) can provide. Rather than let people tap it and hit a confusing runtime
+  // failure, disable it on native Android with an honest explanation.
   if(isNativeAndroid()){
-    const dcBtn=document.getElementById('dc-screen-btn');
-    if(dcBtn) dcBtn.title='Screen sharing on Android streams at a lower, throttled frame rate and without audio for now.';
+    const screenBtns=[document.getElementById('dc-screen-btn'),document.getElementById('mt-screen-toggle')];
+    for(const b of screenBtns){
+      if(!b)continue;
+      b.disabled=true;
+      b.title='Live screen sharing isn\'t available in the Android app yet — this needs deeper native support than a single screenshot or recording.';
+    }
   }
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',gateFloatingCaptureUI);else gateFloatingCaptureUI();
@@ -5171,45 +5453,6 @@ function nativeScreenCapture(){
 }
 function nativeFileSaver(){
   return window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.FileSaver;
-}
-
-/* ==========================================================================================
-   NATIVE ANDROID BRIDGE — Live screen sharing
-   Android's WebView has no getDisplayMedia() at all, so live "Share Screen" during a call used
-   to be hard-disabled on native Android with an explanation, since a real fix needs either a
-   native WebRTC video capturer (a large undertaking) or a stream the WebView can actually accept.
-   This uses the latter: ScreenCapturePlugin.startLiveStream() (native-src/ScreenCapturePlugin.java)
-   keeps the same MediaProjection pipeline already used for screenshots open, and continuously
-   emits throttled, downscaled JPEG frames as a "screenLiveFrame" plugin event. Here, each frame is
-   drawn onto an offscreen <canvas>, and canvas.captureStream() — a standard API the WebView
-   already supports — turns that canvas into a real, live MediaStream with a video track. That
-   track is handed to the exact same PeerJS call code used for every other kind of call/share, so
-   nothing about the calling/relay logic needed to change — only where the video track comes from.
-   ========================================================================================== */
-async function nativeLiveScreenStream(){
-  const ScreenCapture=nativeScreenCapture();
-  if(!ScreenCapture||!ScreenCapture.startLiveStream) throw new Error('Live screen sharing is not available on this build.');
-  const canvas=document.createElement('canvas');
-  canvas.width=960; canvas.height=540; // resized to the real frame size as soon as the first frame arrives
-  const ctx=canvas.getContext('2d');
-  let sized=false;
-  const frameImg=new Image();
-  const handle=await ScreenCapture.addListener('screenLiveFrame',({base64,width,height})=>{
-    if(!sized||canvas.width!==width||canvas.height!==height){ canvas.width=width; canvas.height=height; sized=true; }
-    frameImg.onload=()=>{ try{ ctx.drawImage(frameImg,0,0,canvas.width,canvas.height); }catch(e){} };
-    frameImg.src='data:image/jpeg;base64,'+base64;
-  });
-  await ScreenCapture.startLiveStream();
-  const stream=canvas.captureStream(8); // matches the ~8fps the native side throttles frames to
-  const track=stream.getVideoTracks()[0];
-  const cleanup=async()=>{ try{await handle.remove();}catch(e){} try{await ScreenCapture.stopLiveStream();}catch(e){} };
-  if(track){
-    const origStop=track.stop.bind(track);
-    track.stop=()=>{ cleanup(); origStop(); };
-    track.addEventListener('ended',cleanup,{once:true});
-  }
-  stream._nativeCleanup=cleanup; // in case a caller stops the whole stream rather than the track
-  return stream;
 }
 
 /* ==========================================================================================
